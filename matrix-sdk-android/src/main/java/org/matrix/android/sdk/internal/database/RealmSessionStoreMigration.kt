@@ -18,11 +18,14 @@ package org.matrix.android.sdk.internal.database
 
 import io.realm.DynamicRealm
 import io.realm.RealmMigration
+import io.realm.RealmObjectSchema
+import io.realm.RealmSchema
 import org.matrix.android.sdk.internal.database.model.EditAggregatedSummaryEntityFields
 import org.matrix.android.sdk.internal.database.model.EditionOfEventFields
 import org.matrix.android.sdk.internal.database.model.HomeServerCapabilitiesEntityFields
 import org.matrix.android.sdk.internal.database.model.PendingThreePidEntityFields
 import org.matrix.android.sdk.internal.database.model.PreviewUrlCacheEntityFields
+import org.matrix.android.sdk.internal.database.model.RoomAccountDataEntityFields
 import org.matrix.android.sdk.internal.database.model.RoomEntityFields
 import org.matrix.android.sdk.internal.database.model.RoomMembersLoadStatusType
 import org.matrix.android.sdk.internal.database.model.RoomSummaryEntityFields
@@ -32,7 +35,7 @@ import javax.inject.Inject
 class RealmSessionStoreMigration @Inject constructor() : RealmMigration {
 
     companion object {
-        const val SESSION_STORE_SCHEMA_VERSION = 8L
+        const val SESSION_STORE_SCHEMA_VERSION = 9L
     }
 
     override fun migrate(realm: DynamicRealm, oldVersion: Long, newVersion: Long) {
@@ -46,6 +49,7 @@ class RealmSessionStoreMigration @Inject constructor() : RealmMigration {
         if (oldVersion <= 5) migrateTo6(realm)
         if (oldVersion <= 6) migrateTo7(realm)
         if (oldVersion <= 7) migrateTo8(realm)
+        if (oldVersion <= 8) migrateTo9(realm)
     }
 
     private fun migrateTo1(realm: DynamicRealm) {
@@ -130,10 +134,7 @@ class RealmSessionStoreMigration @Inject constructor() : RealmMigration {
         Timber.d("Step 7 -> 8")
 
         val editionOfEventSchema = realm.schema.create("EditionOfEvent")
-                .apply {
-                    // setEmbedded does not return `this`...
-                    isEmbedded = true
-                }
+                .setIsEmbedded(true)
                 .addField(EditionOfEventFields.CONTENT, String::class.java)
                 .addField(EditionOfEventFields.EVENT_ID, String::class.java)
                 .setRequired(EditionOfEventFields.EVENT_ID, true)
@@ -149,4 +150,25 @@ class RealmSessionStoreMigration @Inject constructor() : RealmMigration {
                 ?.removeField("sourceLocalEchoEvents")
                 ?.addRealmListField(EditAggregatedSummaryEntityFields.EDITIONS.`$`, editionOfEventSchema)
     }
+
+    private fun migrateTo9(realm: DynamicRealm) {
+        Timber.d("Step 8 -> 9")
+
+        val roomAccountDataSchema = realm.schema.create("RoomAccountDataEntity")
+                .setIsEmbedded(true)
+                .addField(RoomAccountDataEntityFields.CONTENT_STR, String::class.java)
+                .addField(RoomAccountDataEntityFields.TYPE, String::class.java)
+                .addIndex(RoomAccountDataEntityFields.TYPE)
+
+        realm.schema.get("RoomEntity")
+                ?.addRealmListField(RoomEntityFields.ACCOUNT_DATA.`$`, roomAccountDataSchema)
+    }
+
+    private fun RealmObjectSchema.setIsEmbedded(isEmbedded: Boolean): RealmObjectSchema {
+        return apply {
+            // setEmbedded does not return `this`...
+            this.isEmbedded = isEmbedded
+        }
+    }
+
 }

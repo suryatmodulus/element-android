@@ -20,6 +20,8 @@ import com.squareup.moshi.Moshi
 import org.matrix.android.sdk.api.util.JSON_DICT_PARAMETERIZED_TYPE
 import org.matrix.android.sdk.internal.database.model.UserAccountDataEntity
 import org.matrix.android.sdk.api.session.accountdata.UserAccountDataEvent
+import org.matrix.android.sdk.api.session.room.accountdata.RoomAccountDataEvent
+import org.matrix.android.sdk.internal.database.model.RoomAccountDataEntity
 import javax.inject.Inject
 
 internal class AccountDataMapper @Inject constructor(moshi: Moshi) {
@@ -28,6 +30,13 @@ internal class AccountDataMapper @Inject constructor(moshi: Moshi) {
 
     fun map(entity: UserAccountDataEntity): UserAccountDataEvent {
         return UserAccountDataEvent(
+                type = entity.type ?: "",
+                content = entity.contentStr?.let { adapter.fromJson(it) }.orEmpty()
+        )
+    }
+
+    fun map(entity: RoomAccountDataEntity): RoomAccountDataEvent {
+        return RoomAccountDataEvent(
                 type = entity.type ?: "",
                 content = entity.contentStr?.let { adapter.fromJson(it) }.orEmpty()
         )

@@ -20,6 +20,7 @@ import androidx.lifecycle.LiveData
 import org.matrix.android.sdk.api.session.crypto.CryptoService
 import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.room.Room
+import org.matrix.android.sdk.api.session.room.accountdata.RoomAccountDataService
 import org.matrix.android.sdk.api.session.room.alias.AliasService
 import org.matrix.android.sdk.api.session.room.call.RoomCallService
 import org.matrix.android.sdk.api.session.room.members.MembershipService
@@ -62,6 +63,7 @@ internal class DefaultRoom @Inject constructor(override val roomId: String,
                                                private val relationService: RelationService,
                                                private val roomMembersService: MembershipService,
                                                private val roomPushRuleService: RoomPushRuleService,
+                                               private val roomAccountDataService: RoomAccountDataService,
                                                private val sendStateTask: SendStateTask,
                                                private val searchTask: SearchTask) :
         Room,
@@ -78,7 +80,8 @@ internal class DefaultRoom @Inject constructor(override val roomId: String,
         TagsService by tagsService,
         RelationService by relationService,
         MembershipService by roomMembersService,
-        RoomPushRuleService by roomPushRuleService {
+        RoomPushRuleService by roomPushRuleService,
+        RoomAccountDataService by roomAccountDataService {
 
     override fun getRoomSummaryLive(): LiveData<Optional<RoomSummary>> {
         return roomSummaryDataSource.getRoomSummaryLive(roomId)

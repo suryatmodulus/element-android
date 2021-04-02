@@ -33,7 +33,7 @@ internal class DefaultAccountDataService @Inject constructor(
         @SessionDatabase private val monarchy: Monarchy,
         private val updateUserAccountDataTask: UpdateUserAccountDataTask,
         private val userAccountDataSyncHandler: UserAccountDataSyncHandler,
-        private val accountDataDataSource: AccountDataDataSource,
+        private val accountDataDataSource: UserAccountDataDataSource,
         private val taskExecutor: TaskExecutor
 ) : AccountDataService {
 

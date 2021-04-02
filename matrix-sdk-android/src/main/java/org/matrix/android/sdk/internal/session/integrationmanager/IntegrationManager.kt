@@ -33,7 +33,7 @@ import org.matrix.android.sdk.internal.session.SessionLifecycleObserver
 import org.matrix.android.sdk.internal.session.SessionScope
 import org.matrix.android.sdk.api.session.accountdata.UserAccountDataTypes
 import org.matrix.android.sdk.api.session.accountdata.UserAccountDataEvent
-import org.matrix.android.sdk.internal.session.user.accountdata.AccountDataDataSource
+import org.matrix.android.sdk.internal.session.user.accountdata.UserAccountDataDataSource
 import org.matrix.android.sdk.internal.session.user.accountdata.UpdateUserAccountDataTask
 import org.matrix.android.sdk.internal.session.widgets.helper.WidgetFactory
 import org.matrix.android.sdk.internal.session.widgets.helper.extractWidgetSequence
@@ -56,7 +56,7 @@ import javax.inject.Inject
 internal class IntegrationManager @Inject constructor(matrixConfiguration: MatrixConfiguration,
                                                       @SessionDatabase private val monarchy: Monarchy,
                                                       private val updateUserAccountDataTask: UpdateUserAccountDataTask,
-                                                      private val accountDataDataSource: AccountDataDataSource,
+                                                      private val accountDataDataSource: UserAccountDataDataSource,
                                                       private val widgetFactory: WidgetFactory)
     : SessionLifecycleObserver {
 

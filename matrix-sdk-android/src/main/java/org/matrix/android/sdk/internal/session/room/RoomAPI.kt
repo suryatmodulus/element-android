@@ -205,7 +205,7 @@ internal interface RoomAPI {
      * Ref: https://matrix.org/docs/spec/client_server/r0.6.1#get-matrix-client-r0-rooms-roomid-state
      */
     @GET(NetworkConstants.URI_API_PREFIX_PATH_R0 + "rooms/{roomId}/state")
-    fun getRoomState(@Path("roomId") roomId: String) : Call<List<Event>>
+    fun getRoomState(@Path("roomId") roomId: String): Call<List<Event>>
 
     /**
      * Send a relation event to a room.
@@ -353,4 +353,13 @@ internal interface RoomAPI {
     fun deleteTag(@Path("userId") userId: String,
                   @Path("roomId") roomId: String,
                   @Path("tag") tag: String): Call<Unit>
+
+    /**
+     * Set an AccountData event to the room.
+     */
+    @DELETE(NetworkConstants.URI_API_PREFIX_PATH_R0 + "/user/{userId}/rooms/{roomId}/account_data/{type}")
+    fun setRoomAccountData(@Path("userId") userId: String,
+                           @Path("roomId") roomId: String,
+                           @Path("type") type: String,
+                           @Body content: JsonDict): Call<Unit>
 }

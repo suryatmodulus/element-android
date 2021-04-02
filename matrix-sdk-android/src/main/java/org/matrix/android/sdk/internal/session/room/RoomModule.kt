@@ -24,9 +24,12 @@ import org.commonmark.renderer.html.HtmlRenderer
 import org.matrix.android.sdk.api.session.file.FileService
 import org.matrix.android.sdk.api.session.room.RoomDirectoryService
 import org.matrix.android.sdk.api.session.room.RoomService
+import org.matrix.android.sdk.api.session.room.accountdata.RoomAccountDataService
 import org.matrix.android.sdk.internal.session.DefaultFileService
 import org.matrix.android.sdk.internal.session.SessionScope
 import org.matrix.android.sdk.internal.session.directory.DirectoryAPI
+import org.matrix.android.sdk.internal.session.room.accountdata.DefaultUpdateRoomAccountDataTask
+import org.matrix.android.sdk.internal.session.room.accountdata.UpdateRoomAccountDataTask
 import org.matrix.android.sdk.internal.session.room.alias.AddRoomAliasTask
 import org.matrix.android.sdk.internal.session.room.alias.DefaultAddRoomAliasTask
 import org.matrix.android.sdk.internal.session.room.alias.DefaultDeleteRoomAliasTask
@@ -228,4 +231,7 @@ internal abstract class RoomModule {
 
     @Binds
     abstract fun bindPeekRoomTask(task: DefaultPeekRoomTask): PeekRoomTask
+
+    @Binds
+    abstract fun bindSetRoomAccountDataTask(task: DefaultUpdateRoomAccountDataTask): UpdateRoomAccountDataTask
 }

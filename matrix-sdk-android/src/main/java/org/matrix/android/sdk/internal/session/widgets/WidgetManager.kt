@@ -38,7 +38,7 @@ import org.matrix.android.sdk.internal.session.SessionLifecycleObserver
 import org.matrix.android.sdk.internal.session.SessionScope
 import org.matrix.android.sdk.internal.session.integrationmanager.IntegrationManager
 import org.matrix.android.sdk.internal.session.room.state.StateEventDataSource
-import org.matrix.android.sdk.internal.session.user.accountdata.AccountDataDataSource
+import org.matrix.android.sdk.internal.session.user.accountdata.UserAccountDataDataSource
 import org.matrix.android.sdk.internal.session.widgets.helper.WidgetFactory
 import org.matrix.android.sdk.internal.session.widgets.helper.extractWidgetSequence
 import java.util.HashMap
@@ -46,7 +46,7 @@ import javax.inject.Inject
 
 @SessionScope
 internal class WidgetManager @Inject constructor(private val integrationManager: IntegrationManager,
-                                                 private val accountDataDataSource: AccountDataDataSource,
+                                                 private val accountDataDataSource: UserAccountDataDataSource,
                                                  private val stateEventDataSource: StateEventDataSource,
                                                  private val createWidgetTask: CreateWidgetTask,
                                                  private val widgetFactory: WidgetFactory,
