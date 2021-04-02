@@ -27,12 +27,13 @@ import im.vector.app.features.call.audio.CallAudioManager
 import im.vector.app.features.call.utils.EglUtils
 import im.vector.app.push.fcm.FcmHelper
 import kotlinx.coroutines.asCoroutineDispatcher
+import org.matrix.android.sdk.api.extensions.orFalse
 import org.matrix.android.sdk.api.extensions.tryOrNull
 import org.matrix.android.sdk.api.session.Session
 import org.matrix.android.sdk.api.session.call.CallListener
 import org.matrix.android.sdk.api.session.call.CallState
 import org.matrix.android.sdk.api.session.call.MxCall
-import org.matrix.android.sdk.api.session.call.PSTNProtocolChecker
+import org.matrix.android.sdk.api.session.call.CallProtocolsChecker
 import org.matrix.android.sdk.api.session.room.model.call.CallAnswerContent
 import org.matrix.android.sdk.api.session.room.model.call.CallCandidatesContent
 import org.matrix.android.sdk.api.session.room.model.call.CallHangupContent
@@ -64,8 +65,8 @@ class WebRtcCallManager @Inject constructor(
     private val currentSession: Session?
         get() = activeSessionDataSource.currentValue?.orNull()
 
-    private val pstnProtocolChecker: PSTNProtocolChecker?
-        get() = currentSession?.callSignalingService()?.getPSTNProtocolChecker()
+    private val protocolsChecker: CallProtocolsChecker?
+        get() = currentSession?.callSignalingService()?.getProtocolsChecker()
 
     interface CurrentCallListener {
         fun onCurrentCallChange(call: WebRtcCall?) {}
@@ -73,17 +74,20 @@ class WebRtcCallManager @Inject constructor(
     }
 
     val supportedPSTNProtocol: String?
-        get() = pstnProtocolChecker?.supportedPSTNProtocol
+        get() = protocolsChecker?.supportedPSTNProtocol
 
     val supportsPSTNProtocol: Boolean
         get() = supportedPSTNProtocol != null
 
-    fun addPstnSupportListener(listener: PSTNProtocolChecker.Listener) {
-        pstnProtocolChecker?.addListener(listener)
+    val supportsVirtualRooms: Boolean
+        get() = protocolsChecker?.supportVirtualRooms.orFalse()
+
+    fun addProtocolsCheckerListener(listener: CallProtocolsChecker.Listener) {
+        protocolsChecker?.addListener(listener)
     }
 
-    fun removePstnSupportListener(listener: PSTNProtocolChecker.Listener) {
-        pstnProtocolChecker?.removeListener(listener)
+    fun removeProtocolsCheckerListener(listener: CallProtocolsChecker.Listener) {
+        protocolsChecker?.removeListener(listener)
     }
 
     private val currentCallsListeners = CopyOnWriteArrayList<CurrentCallListener>()
@@ -155,7 +159,7 @@ class WebRtcCallManager @Inject constructor(
     }
 
     fun checkForPSTNSupportIfNeeded() {
-        pstnProtocolChecker?.checkForPSTNSupportIfNeeded()
+        protocolsChecker?.checkProtocols()
     }
 
     /**

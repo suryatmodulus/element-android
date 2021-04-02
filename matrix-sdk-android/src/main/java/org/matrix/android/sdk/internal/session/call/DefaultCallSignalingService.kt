@@ -19,7 +19,7 @@ package org.matrix.android.sdk.internal.session.call
 import org.matrix.android.sdk.api.session.call.CallListener
 import org.matrix.android.sdk.api.session.call.CallSignalingService
 import org.matrix.android.sdk.api.session.call.MxCall
-import org.matrix.android.sdk.api.session.call.PSTNProtocolChecker
+import org.matrix.android.sdk.api.session.call.CallProtocolsChecker
 import org.matrix.android.sdk.api.session.call.TurnServerResponse
 import org.matrix.android.sdk.internal.session.SessionScope
 import timber.log.Timber
@@ -31,15 +31,15 @@ internal class DefaultCallSignalingService @Inject constructor(
         private val mxCallFactory: MxCallFactory,
         private val activeCallHandler: ActiveCallHandler,
         private val turnServerDataSource: TurnServerDataSource,
-        private val pstnProtocolChecker: PSTNProtocolChecker
+        private val protocolsChecker: CallProtocolsChecker
 ) : CallSignalingService {
 
     override suspend fun getTurnServer(): TurnServerResponse {
         return turnServerDataSource.getTurnServer()
     }
 
-    override fun getPSTNProtocolChecker(): PSTNProtocolChecker {
-        return pstnProtocolChecker
+    override fun getProtocolsChecker(): CallProtocolsChecker {
+        return protocolsChecker
     }
 
     override fun createOutgoingCall(roomId: String, otherUserId: String, isVideoCall: Boolean): MxCall {

@@ -38,6 +38,7 @@ import im.vector.app.core.extensions.exhaustive
 import im.vector.app.core.platform.VectorViewModel
 import im.vector.app.core.resources.StringProvider
 import im.vector.app.features.call.dialpad.DialPadLookup
+import im.vector.app.features.call.lookup.ThirdPartyLookup
 import im.vector.app.features.call.webrtc.WebRtcCallManager
 import im.vector.app.features.command.CommandParser
 import im.vector.app.features.command.ParsedCommand
@@ -69,7 +70,7 @@ import org.matrix.android.sdk.api.extensions.tryOrNull
 import org.matrix.android.sdk.api.query.QueryStringValue
 import org.matrix.android.sdk.api.raw.RawService
 import org.matrix.android.sdk.api.session.Session
-import org.matrix.android.sdk.api.session.call.PSTNProtocolChecker
+import org.matrix.android.sdk.api.session.call.CallProtocolsChecker
 import org.matrix.android.sdk.api.session.crypto.MXCryptoError
 import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.events.model.LocalEcho
@@ -123,7 +124,7 @@ class RoomDetailViewModel @AssistedInject constructor(
         private val directRoomHelper: DirectRoomHelper,
         timelineSettingsFactory: TimelineSettingsFactory
 ) : VectorViewModel<RoomDetailViewState, RoomDetailAction, RoomDetailViewEvents>(initialState),
-        Timeline.Listener, ChatEffectManager.Delegate, PSTNProtocolChecker.Listener {
+        Timeline.Listener, ChatEffectManager.Delegate, CallProtocolsChecker.Listener {
 
     private val room = session.getRoom(initialState.roomId)!!
     private val eventId = initialState.eventId
@@ -185,7 +186,7 @@ class RoomDetailViewModel @AssistedInject constructor(
         }
         // Inform the SDK that the room is displayed
         session.onRoomDisplayed(initialState.roomId)
-        callManager.addPstnSupportListener(this)
+        callManager.addProtocolsCheckerListener(this)
         callManager.checkForPSTNSupportIfNeeded()
         chatEffectManager.delegate = this
 
@@ -331,7 +332,7 @@ class RoomDetailViewModel @AssistedInject constructor(
     private fun handleStartCallWithPhoneNumber(action: RoomDetailAction.StartCallWithPhoneNumber) {
         viewModelScope.launch {
             try {
-                val result = DialPadLookup(session, directRoomHelper, callManager).lookupPhoneNumber(action.phoneNumber)
+                val result = DialPadLookup(ThirdPartyLookup(session, callManager), directRoomHelper).lookupPhoneNumber(action.phoneNumber)
                 callManager.startOutgoingCall(result.roomId, result.userId, action.videoCall)
             } catch (failure: Throwable) {
                 _viewEvents.post(RoomDetailViewEvents.ActionFailure(action, failure))
@@ -1517,7 +1518,7 @@ class RoomDetailViewModel @AssistedInject constructor(
         }
         chatEffectManager.delegate = null
         chatEffectManager.dispose()
-        callManager.removePstnSupportListener(this)
+        callManager.removeProtocolsCheckerListener(this)
         super.onCleared()
     }
 }

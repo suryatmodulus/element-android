@@ -28,48 +28,62 @@ import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
-private const val PSTN_VECTOR_KEY = "im.vector.protocol.pstn"
-private const val PSTN_MATRIX_KEY = "m.protocol.pstn"
+const val PROTOCOL_PSTN_PREFIXED = "im.vector.protocol.pstn"
+const val PROTOCOL_PSTN = "m.protocol.pstn"
+const val PROTOCOL_SIP_NATIVE = "im.vector.protocol.sip_native"
+const val PROTOCOL_SIP_VIRTUAL = "im.vector.protocol.sip_virtual"
+
 
 /**
- * This class is responsible for checking if the HS support the PSTN protocol.
+ * This class is responsible for checking if the HS support some protocols for VoIP.
  * As long as the request succeed, it'll check only once by session.
  */
 @SessionScope
-class PSTNProtocolChecker @Inject internal constructor(private val taskExecutor: TaskExecutor,
-                                                       private val getThirdPartyProtocolsTask: GetThirdPartyProtocolsTask) {
+class CallProtocolsChecker @Inject internal constructor(private val taskExecutor: TaskExecutor,
+                                                        private val getThirdPartyProtocolsTask: GetThirdPartyProtocolsTask) {
 
     interface Listener {
-        fun onPSTNSupportUpdated()
+        fun onPSTNSupportUpdated() = Unit
+        fun onVirtualRoomSupportUpdated() = Unit
     }
 
     private var alreadyChecked = AtomicBoolean(false)
 
-    private val pstnSupportListeners = mutableListOf<Listener>()
+    private val listeners = mutableListOf<Listener>()
 
     fun addListener(listener: Listener) {
-        pstnSupportListeners.add(listener)
+        listeners.add(listener)
     }
 
     fun removeListener(listener: Listener) {
-        pstnSupportListeners.remove(listener)
+        listeners.remove(listener)
     }
 
     var supportedPSTNProtocol: String? = null
         private set
 
-    fun checkForPSTNSupportIfNeeded() {
+    var supportVirtualRooms: Boolean = false
+        private set
+
+    fun checkProtocols() {
         if (alreadyChecked.get()) return
-        taskExecutor.executorScope.checkForPSTNSupport()
+        taskExecutor.executorScope.checkThirdPartyProtocols()
     }
 
-    private fun CoroutineScope.checkForPSTNSupport() = launch {
+    private fun CoroutineScope.checkThirdPartyProtocols() = launch {
         try {
-            supportedPSTNProtocol = getSupportedPSTN(3)
+            val protocols = getThirdPartyProtocols(3)
             alreadyChecked.set(true)
+            supportedPSTNProtocol = protocols.extractPSTN()
             if (supportedPSTNProtocol != null) {
-                pstnSupportListeners.forEach {
+                listeners.forEach {
                     tryOrNull { it.onPSTNSupportUpdated() }
+                }
+            }
+            supportVirtualRooms = protocols.supportsVirtualRooms()
+            if (supportVirtualRooms) {
+                listeners.forEach {
+                    tryOrNull { it.onVirtualRoomSupportUpdated() }
                 }
             }
         } catch (failure: Throwable) {
@@ -77,8 +91,20 @@ class PSTNProtocolChecker @Inject internal constructor(private val taskExecutor:
         }
     }
 
-    private suspend fun getSupportedPSTN(maxTries: Int): String? {
-        val thirdPartyProtocols: Map<String, ThirdPartyProtocol> = try {
+    private fun Map<String, ThirdPartyProtocol>.extractPSTN(): String? {
+        return when {
+            containsKey(PROTOCOL_PSTN_PREFIXED) -> PROTOCOL_PSTN_PREFIXED
+            containsKey(PROTOCOL_PSTN)          -> PROTOCOL_PSTN
+            else                                                    -> null
+        }
+    }
+
+    private fun Map<String, ThirdPartyProtocol>.supportsVirtualRooms(): Boolean {
+      return containsKey(PROTOCOL_SIP_VIRTUAL) && containsKey(PROTOCOL_SIP_NATIVE)
+    }
+
+    private suspend fun getThirdPartyProtocols(maxTries: Int): Map<String, ThirdPartyProtocol> {
+        return try {
             getThirdPartyProtocolsTask.execute(Unit)
         } catch (failure: Throwable) {
             if (maxTries == 1) {
@@ -86,13 +112,8 @@ class PSTNProtocolChecker @Inject internal constructor(private val taskExecutor:
             } else {
                 // Wait for 10s before trying again
                 delay(10_000L)
-                return getSupportedPSTN(maxTries - 1)
+                return getThirdPartyProtocols(maxTries - 1)
             }
-        }
-        return when {
-            thirdPartyProtocols.containsKey(PSTN_VECTOR_KEY) -> PSTN_VECTOR_KEY
-            thirdPartyProtocols.containsKey(PSTN_MATRIX_KEY) -> PSTN_MATRIX_KEY
-            else                                             -> null
         }
     }
 }
