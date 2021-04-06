@@ -14,6 +14,7 @@ Improvements 🙌:
  - Update reactions to Unicode 13.1 (#2998)
  - Be more robust when parsing some enums
  - Improve timeline filtering (dissociate membership and profile events, display hidden events when highlighted, fix hidden item/read receipts behavior)
+ - Room list improvements (paging)
 
 Bugfix 🐛:
  - Fix bad theme change for the MainActivity
@@ -36,6 +37,7 @@ Test:
 
 Other changes:
  - Add version details on the login screen, in debug or developer mode
+ - Migrate Retrofit interface to coroutine calls
 
 Changes in Element 1.1.3 (2021-03-18)
 ===================================================

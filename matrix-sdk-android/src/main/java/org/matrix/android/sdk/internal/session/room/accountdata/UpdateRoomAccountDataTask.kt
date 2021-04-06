@@ -41,7 +41,7 @@ internal class DefaultUpdateRoomAccountDataTask @Inject constructor(
 
     override suspend fun execute(params: UpdateRoomAccountDataTask.Params) {
         return executeRequest(globalErrorReceiver) {
-            apiCall = roomApi.setRoomAccountData(userId, params.roomId, params.type, params.content)
+            roomApi.setRoomAccountData(userId, params.roomId, params.type, params.content)
         }
     }
 }
