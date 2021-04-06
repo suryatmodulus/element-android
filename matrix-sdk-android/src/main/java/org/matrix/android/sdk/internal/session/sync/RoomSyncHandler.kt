@@ -64,14 +64,14 @@ import org.matrix.android.sdk.internal.session.sync.model.LazyRoomSyncEphemeral
 import org.matrix.android.sdk.internal.session.sync.model.RoomSync
 import org.matrix.android.sdk.internal.session.sync.model.RoomSyncAccountData
 import org.matrix.android.sdk.internal.session.sync.model.RoomsSyncResponse
+import org.matrix.android.sdk.internal.session.sync.parsing.RoomSyncAccountDataHandler
 import org.matrix.android.sdk.internal.util.computeBestChunkSize
 import timber.log.Timber
 import javax.inject.Inject
 
 internal class RoomSyncHandler @Inject constructor(private val readReceiptHandler: ReadReceiptHandler,
                                                    private val roomSummaryUpdater: RoomSummaryUpdater,
-                                                   private val roomTagHandler: RoomTagHandler,
-                                                   private val roomFullyReadHandler: RoomFullyReadHandler,
+                                                   private val roomAccountDataHandler: RoomSyncAccountDataHandler,
                                                    private val cryptoService: DefaultCryptoService,
                                                    private val roomMemberEventHandler: RoomMemberEventHandler,
                                                    private val roomTypingUsersHandler: RoomTypingUsersHandler,
@@ -195,7 +195,7 @@ internal class RoomSyncHandler @Inject constructor(private val readReceiptHandle
             handleRoomAccountDataEvents(realm, roomId, roomSync.accountData)
         }
 
-        val roomEntity = RoomEntity.where(realm, roomId).findFirst() ?: realm.createObject(roomId)
+        val roomEntity = RoomEntity.getOrCreate(realm, roomId)
 
         if (roomEntity.membership == Membership.INVITE) {
             roomEntity.chunks.deleteAllFromRealm()
@@ -257,7 +257,7 @@ internal class RoomSyncHandler @Inject constructor(private val readReceiptHandle
                                   insertType: EventInsertType,
                                   syncLocalTimestampMillis: Long): RoomEntity {
         Timber.v("Handle invited sync for room $roomId")
-        val roomEntity = RoomEntity.where(realm, roomId).findFirst() ?: realm.createObject(roomId)
+        val roomEntity = RoomEntity.getOrCreate(realm, roomId)
         roomEntity.membership = Membership.INVITE
         if (roomSync.inviteState != null && roomSync.inviteState.events.isNotEmpty()) {
             roomSync.inviteState.events.forEach { event ->
@@ -286,7 +286,7 @@ internal class RoomSyncHandler @Inject constructor(private val readReceiptHandle
                                roomSync: RoomSync,
                                insertType: EventInsertType,
                                syncLocalTimestampMillis: Long): RoomEntity {
-        val roomEntity = RoomEntity.where(realm, roomId).findFirst() ?: realm.createObject(roomId)
+        val roomEntity = RoomEntity.getOrCreate(realm, roomId)
         for (event in roomSync.state?.events.orEmpty()) {
             if (event.eventId == null || event.stateKey == null || event.type == null) {
                 continue
@@ -453,16 +453,7 @@ internal class RoomSyncHandler @Inject constructor(private val readReceiptHandle
     }
 
     private fun handleRoomAccountDataEvents(realm: Realm, roomId: String, accountData: RoomSyncAccountData) {
-        for (event in accountData.events) {
-            val eventType = event.getClearType()
-            if (eventType == EventType.TAG) {
-                val content = event.getClearContent().toModel<RoomTagContent>()
-                roomTagHandler.handle(realm, roomId, content)
-            } else if (eventType == EventType.FULLY_READ) {
-                val content = event.getClearContent().toModel<FullyReadContent>()
-                roomFullyReadHandler.handle(realm, roomId, content)
-            }
-        }
+        roomAccountDataHandler.handle(realm, roomId, accountData)
     }
 
     private fun Event.getFixedRoomMemberContent(): RoomMemberContent? {
