@@ -186,7 +186,7 @@ class RoomDetailViewModel @AssistedInject constructor(
         // Inform the SDK that the room is displayed
         session.onRoomDisplayed(initialState.roomId)
         callManager.addProtocolsCheckerListener(this)
-        callManager.checkForPSTNSupportIfNeeded()
+        callManager.checkForProtocolsSupportIfNeeded()
         chatEffectManager.delegate = this
 
         // Ensure to share the outbound session keys with all members

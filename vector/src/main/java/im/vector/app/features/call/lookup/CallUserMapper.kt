@@ -19,6 +19,7 @@ package im.vector.app.features.call.lookup
 import org.matrix.android.sdk.api.extensions.orFalse
 import org.matrix.android.sdk.api.extensions.tryOrNull
 import org.matrix.android.sdk.api.session.Session
+import org.matrix.android.sdk.api.session.call.CallProtocolsChecker
 import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.events.model.toContent
 import org.matrix.android.sdk.api.session.events.model.toModel
@@ -35,15 +36,13 @@ const val EVENT_TYPE_VIRTUAL_ROOM = "im.vector.is_virtual_room"
 @Singleton
 class CallUserMapper @Inject constructor(private val _session: Provider<Session>) {
 
-    val session: Session
+    private val session: Session
         get() = _session.get()
 
-    private val virtualRoomIdCache = HashSet<String>()
+    private val protocolsChecker: CallProtocolsChecker
+        get() = session.callSignalingService().getProtocolsChecker()
 
-    private suspend fun userToVirtualUser(userId: String): String? {
-        val results = session.sipVirtualLookup(userId)
-        return results.firstOrNull()?.userId
-    }
+    private val virtualRoomIdCache = HashSet<String>()
 
     fun nativeRoomForVirtualRoom(roomId: String): String? {
         val virtualRoom = session.getRoom(roomId) ?: return null
@@ -74,11 +73,13 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
         return createEvent.content?.containsKey(EVENT_TYPE_VIRTUAL_ROOM).orFalse()
     }
 
-    suspend fun onNewInvitedRoom(invitedRoomId: String){
+    suspend fun onNewInvitedRoom(invitedRoomId: String) {
+        protocolsChecker.awaitCheckProtocols()
+        if (!protocolsChecker.supportVirtualRooms) return
         val invitedRoom = session.getRoom(invitedRoomId) ?: return
         val inviterId = invitedRoom.roomSummary()?.inviterId ?: return
         val nativeLookup = session.sipNativeLookup(inviterId).firstOrNull() ?: return
-        if(nativeLookup.fields.containsKey("is_virtual")){
+        if (nativeLookup.fields.containsKey("is_virtual")) {
             val nativeUser = nativeLookup.userId
             val nativeRoomId = session.getExistingDirectRoomWithUser(nativeUser)
             if (nativeRoomId != null) {
@@ -97,16 +98,20 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
             // in however long it takes for the echo of setAccountData to come down the sync
             virtualRoomIdCache.add(invitedRoom.roomId)
         }
-
     }
 
-    private suspend fun Room.markVirtual(){
+    private suspend fun userToVirtualUser(userId: String): String? {
+        val results = session.sipVirtualLookup(userId)
+        return results.firstOrNull()?.userId
+    }
+
+    private suspend fun Room.markVirtual() {
         val virtualRoomContent = RoomVirtualContent(nativeRoom = roomId)
         updateAccountData(EVENT_TYPE_VIRTUAL_ROOM, virtualRoomContent.toContent())
     }
 
-    private suspend fun ensureVirtualRoomExists(userId: String, nativeRoomId:String): String {
-        val existingDMRoom = tryOrNull {  session.getExistingDirectRoomWithUser(userId) }
+    private suspend fun ensureVirtualRoomExists(userId: String, nativeRoomId: String): String {
+        val existingDMRoom = tryOrNull { session.getExistingDirectRoomWithUser(userId) }
         val roomId: String
         if (existingDMRoom != null) {
             roomId = existingDMRoom

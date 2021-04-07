@@ -32,6 +32,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.transition.Transition
 import im.vector.app.R
 import im.vector.app.core.di.ActiveSessionHolder
+import im.vector.app.core.di.DaggerScreenComponent
 import im.vector.app.core.di.HasVectorInjector
 import im.vector.app.core.di.ScreenComponent
 import im.vector.app.core.di.VectorComponent

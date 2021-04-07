@@ -16,7 +16,6 @@
 
 package org.matrix.android.sdk.api.session.call
 
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.extensions.tryOrNull
@@ -33,7 +32,6 @@ const val PROTOCOL_PSTN = "m.protocol.pstn"
 const val PROTOCOL_SIP_NATIVE = "im.vector.protocol.sip_native"
 const val PROTOCOL_SIP_VIRTUAL = "im.vector.protocol.sip_virtual"
 
-
 /**
  * This class is responsible for checking if the HS support some protocols for VoIP.
  * As long as the request succeed, it'll check only once by session.
@@ -47,7 +45,8 @@ class CallProtocolsChecker @Inject internal constructor(private val taskExecutor
         fun onVirtualRoomSupportUpdated() = Unit
     }
 
-    private var alreadyChecked = AtomicBoolean(false)
+    private val alreadyChecked = AtomicBoolean(false)
+    private val checking = AtomicBoolean(false)
 
     private val listeners = mutableListOf<Listener>()
 
@@ -66,14 +65,22 @@ class CallProtocolsChecker @Inject internal constructor(private val taskExecutor
         private set
 
     fun checkProtocols() {
-        if (alreadyChecked.get()) return
-        taskExecutor.executorScope.checkThirdPartyProtocols()
+        taskExecutor.executorScope.launch {
+            checkThirdPartyProtocols()
+        }
     }
 
-    private fun CoroutineScope.checkThirdPartyProtocols() = launch {
+    suspend fun awaitCheckProtocols() {
+        checkThirdPartyProtocols()
+    }
+
+    private suspend fun checkThirdPartyProtocols() {
+        if (alreadyChecked.get()) return
+        if (!checking.compareAndSet(false, true)) return
         try {
             val protocols = getThirdPartyProtocols(3)
             alreadyChecked.set(true)
+            checking.set(false)
             supportedPSTNProtocol = protocols.extractPSTN()
             if (supportedPSTNProtocol != null) {
                 listeners.forEach {
@@ -87,7 +94,7 @@ class CallProtocolsChecker @Inject internal constructor(private val taskExecutor
                 }
             }
         } catch (failure: Throwable) {
-            Timber.v("Fail to get supported PSTN, will check again next time.")
+            Timber.v("Fail to get third party protocols, will check again next time.")
         }
     }
 
@@ -95,12 +102,12 @@ class CallProtocolsChecker @Inject internal constructor(private val taskExecutor
         return when {
             containsKey(PROTOCOL_PSTN_PREFIXED) -> PROTOCOL_PSTN_PREFIXED
             containsKey(PROTOCOL_PSTN)          -> PROTOCOL_PSTN
-            else                                                    -> null
+            else                                -> null
         }
     }
 
     private fun Map<String, ThirdPartyProtocol>.supportsVirtualRooms(): Boolean {
-      return containsKey(PROTOCOL_SIP_VIRTUAL) && containsKey(PROTOCOL_SIP_NATIVE)
+        return containsKey(PROTOCOL_SIP_VIRTUAL) && containsKey(PROTOCOL_SIP_NATIVE)
     }
 
     private suspend fun getThirdPartyProtocols(maxTries: Int): Map<String, ThirdPartyProtocol> {

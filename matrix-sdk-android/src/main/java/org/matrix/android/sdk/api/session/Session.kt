@@ -248,12 +248,19 @@ interface Session :
      * A global session listener to get notified for some events.
      */
     interface Listener {
+
         /**
          * Possible cases:
          * - The access token is not valid anymore,
          * - a M_CONSENT_NOT_GIVEN error has been received from the homeserver
          */
-        fun onGlobalError(globalError: GlobalError)
+        fun onGlobalError(globalError: GlobalError) = Unit
+
+        /**
+         * Called when the session received new invites to room so the client can react to it once.
+         */
+        fun onNewInvitedRoom(roomId: String) = Unit
+
     }
 
     val sharedSecretStorageService: SharedSecretStorageService

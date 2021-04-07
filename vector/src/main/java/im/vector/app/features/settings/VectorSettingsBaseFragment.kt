@@ -22,6 +22,7 @@ import android.view.View
 import androidx.annotation.CallSuper
 import androidx.preference.PreferenceFragmentCompat
 import im.vector.app.R
+import im.vector.app.core.di.DaggerScreenComponent
 import im.vector.app.core.di.HasScreenInjector
 import im.vector.app.core.di.ScreenComponent
 import im.vector.app.core.error.ErrorFormatter

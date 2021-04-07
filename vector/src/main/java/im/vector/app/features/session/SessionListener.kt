@@ -20,13 +20,16 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import im.vector.app.core.extensions.postLiveEvent
 import im.vector.app.core.utils.LiveEvent
+import im.vector.app.features.call.lookup.CallUserMapper
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.failure.GlobalError
 import org.matrix.android.sdk.api.session.Session
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class SessionListener @Inject constructor() : Session.Listener {
+class SessionListener @Inject constructor(private val callUserMapper: CallUserMapper) : Session.Listener {
 
     private val _globalErrorLiveData = MutableLiveData<LiveEvent<GlobalError>>()
     val globalErrorLiveData: LiveData<LiveEvent<GlobalError>>
@@ -35,4 +38,11 @@ class SessionListener @Inject constructor() : Session.Listener {
     override fun onGlobalError(globalError: GlobalError) {
         _globalErrorLiveData.postLiveEvent(globalError)
     }
+
+    override fun onNewInvitedRoom(roomId: String) {
+        GlobalScope.launch {
+            callUserMapper.onNewInvitedRoom(roomId)
+        }
+    }
+
 }

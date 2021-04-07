@@ -135,8 +135,7 @@ internal class DefaultSession @Inject constructor(
         HomeServerCapabilitiesService by homeServerCapabilitiesService.get(),
         ProfileService by profileService.get(),
         AccountDataService by accountDataService.get(),
-        AccountService by accountService.get(),
-        GlobalErrorHandler.Listener {
+        AccountService by accountService.get() {
 
     override val sharedSecretStorageService: SharedSecretStorageService
         get() = _sharedSecretStorageService.get()
@@ -158,7 +157,6 @@ internal class DefaultSession @Inject constructor(
         uiHandler.post {
             lifecycleObservers.forEach { it.onSessionStarted() }
         }
-        globalErrorHandler.listener = this
     }
 
     override fun requireBackgroundSync() {
@@ -201,7 +199,6 @@ internal class DefaultSession @Inject constructor(
         }
         cryptoService.get().close()
         isOpen = false
-        globalErrorHandler.listener = null
     }
 
     override fun getSyncStateLive() = getSyncThread().liveState()
@@ -226,10 +223,6 @@ internal class DefaultSession @Inject constructor(
         }
         cacheService.get().clearCache()
         workManagerProvider.cancelAllWorks()
-    }
-
-    override fun onGlobalError(globalError: GlobalError) {
-        sessionListeners.dispatchGlobalError(globalError)
     }
 
     override fun contentUrlResolver() = contentUrlResolver

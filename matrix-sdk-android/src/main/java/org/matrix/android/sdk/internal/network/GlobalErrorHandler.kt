@@ -23,6 +23,7 @@ import org.matrix.android.sdk.internal.session.SessionScope
 import org.matrix.android.sdk.internal.task.TaskExecutor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.matrix.android.sdk.internal.session.SessionListeners
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -30,10 +31,9 @@ import javax.inject.Inject
 internal class GlobalErrorHandler @Inject constructor(
         private val taskExecutor: TaskExecutor,
         private val sessionParamsStore: SessionParamsStore,
+        private val sessionListeners: SessionListeners,
         @SessionId private val sessionId: String
 ) : GlobalErrorReceiver {
-
-    var listener: Listener? = null
 
     override fun handleGlobalError(globalError: GlobalError) {
         Timber.e("Global error received: $globalError")
@@ -44,8 +44,9 @@ internal class GlobalErrorHandler @Inject constructor(
                 sessionParamsStore.setTokenInvalid(sessionId)
             }
         }
-
-        listener?.onGlobalError(globalError)
+        sessionListeners.dispatch {
+            it.onGlobalError(globalError)
+        }
     }
 
     internal interface Listener {

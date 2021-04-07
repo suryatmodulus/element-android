@@ -16,10 +16,12 @@
 
 package org.matrix.android.sdk.internal.session
 
+import org.matrix.android.sdk.api.extensions.tryOrNull
 import org.matrix.android.sdk.api.failure.GlobalError
 import org.matrix.android.sdk.api.session.Session
 import javax.inject.Inject
 
+@SessionScope
 internal class SessionListeners @Inject constructor() {
 
     private val listeners = mutableSetOf<Session.Listener>()
@@ -36,10 +38,10 @@ internal class SessionListeners @Inject constructor() {
         }
     }
 
-    fun dispatchGlobalError(globalError: GlobalError) {
+    fun dispatch(block: (Session.Listener) -> Unit) {
         synchronized(listeners) {
             listeners.forEach {
-                it.onGlobalError(globalError)
+                tryOrNull { block(it) }
             }
         }
     }

@@ -158,7 +158,7 @@ class WebRtcCallManager @Inject constructor(
         return callsByCallId.values.toList()
     }
 
-    fun checkForPSTNSupportIfNeeded() {
+    fun checkForProtocolsSupportIfNeeded() {
         protocolsChecker?.checkProtocols()
     }
 
