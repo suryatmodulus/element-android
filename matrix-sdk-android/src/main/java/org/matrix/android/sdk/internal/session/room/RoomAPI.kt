@@ -355,7 +355,7 @@ internal interface RoomAPI {
     /**
      * Set an AccountData event to the room.
      */
-    @DELETE(NetworkConstants.URI_API_PREFIX_PATH_R0 + "/user/{userId}/rooms/{roomId}/account_data/{type}")
+    @PUT(NetworkConstants.URI_API_PREFIX_PATH_R0 + "user/{userId}/rooms/{roomId}/account_data/{type}")
     suspend fun setRoomAccountData(@Path("userId") userId: String,
                            @Path("roomId") roomId: String,
                            @Path("type") type: String,
