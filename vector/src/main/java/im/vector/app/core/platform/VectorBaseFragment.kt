@@ -37,7 +37,6 @@ import com.airbnb.mvrx.BaseMvRxFragment
 import com.bumptech.glide.util.Util.assertMainThread
 import com.jakewharton.rxbinding3.view.clicks
 import im.vector.app.R
-import im.vector.app.core.di.DaggerScreenComponent
 import im.vector.app.core.di.HasScreenInjector
 import im.vector.app.core.di.ScreenComponent
 import im.vector.app.core.dialogs.UnrecognizedCertificateDialog

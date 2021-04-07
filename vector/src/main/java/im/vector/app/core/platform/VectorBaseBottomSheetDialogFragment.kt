@@ -34,7 +34,6 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.jakewharton.rxbinding3.view.clicks
-import im.vector.app.core.di.DaggerScreenComponent
 import im.vector.app.core.di.ScreenComponent
 import im.vector.app.core.utils.DimensionConverter
 import io.reactivex.android.schedulers.AndroidSchedulers

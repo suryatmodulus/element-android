@@ -48,7 +48,6 @@ import com.jakewharton.rxbinding3.view.clicks
 import im.vector.app.BuildConfig
 import im.vector.app.R
 import im.vector.app.core.di.ActiveSessionHolder
-import im.vector.app.core.di.DaggerScreenComponent
 import im.vector.app.core.di.HasScreenInjector
 import im.vector.app.core.di.HasVectorInjector
 import im.vector.app.core.di.ScreenComponent

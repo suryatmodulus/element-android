@@ -16,43 +16,36 @@
 
 package im.vector.app.features.call.lookup
 
-import im.vector.app.features.call.webrtc.WebRtcCallManager
 import org.matrix.android.sdk.api.extensions.tryOrNull
 import org.matrix.android.sdk.api.session.Session
 import org.matrix.android.sdk.api.session.call.PROTOCOL_SIP_NATIVE
 import org.matrix.android.sdk.api.session.call.PROTOCOL_SIP_VIRTUAL
 import org.matrix.android.sdk.api.session.thirdparty.model.ThirdPartyUser
-import javax.inject.Inject
 
-class ThirdPartyLookup @Inject constructor(private val session: Session,
-                                           private val callManager: WebRtcCallManager
-) {
+suspend fun Session.pstnLookup(phoneNumber: String, protocol: String?): List<ThirdPartyUser> {
+    if(protocol == null) return emptyList()
+    return tryOrNull {
+        thirdPartyService().getThirdPartyUser(
+                protocol = protocol,
+                fields = mapOf("m.id.phone" to phoneNumber)
+        )
+    }.orEmpty()
+}
 
-    suspend fun pstnLookup(phoneNumber: String): List<ThirdPartyUser> {
-        val supportedProtocolKey = callManager.supportedPSTNProtocol ?: throw RuntimeException()
-        return tryOrNull {
-            session.thirdPartyService().getThirdPartyUser(
-                    protocol = supportedProtocolKey,
-                    fields = mapOf("m.id.phone" to phoneNumber)
-            )
-        }.orEmpty()
-    }
+suspend fun Session.sipVirtualLookup(nativeMxid: String): List<ThirdPartyUser> {
+    return tryOrNull {
+        thirdPartyService().getThirdPartyUser(
+                protocol = PROTOCOL_SIP_VIRTUAL,
+                fields = mapOf("native_mxid" to nativeMxid)
+        )
+    }.orEmpty()
+}
 
-    suspend fun sipVirtualLookup(nativeMxid: String): List<ThirdPartyUser> {
-        return tryOrNull {
-            session.thirdPartyService().getThirdPartyUser(
-                    protocol = PROTOCOL_SIP_VIRTUAL,
-                    fields = mapOf("native_mxid" to nativeMxid)
-            )
-        }.orEmpty()
-    }
-
-    suspend fun sipNativeLookup(virtualMxid: String): List<ThirdPartyUser> {
-        return tryOrNull {
-            session.thirdPartyService().getThirdPartyUser(
-                    protocol = PROTOCOL_SIP_NATIVE,
-                    fields = mapOf("virtual_mxid" to virtualMxid)
-            )
-        }.orEmpty()
-    }
+suspend fun Session.sipNativeLookup(virtualMxid: String): List<ThirdPartyUser> {
+    return tryOrNull {
+        thirdPartyService().getThirdPartyUser(
+                protocol = PROTOCOL_SIP_NATIVE,
+                fields = mapOf("virtual_mxid" to virtualMxid)
+        )
+    }.orEmpty()
 }
