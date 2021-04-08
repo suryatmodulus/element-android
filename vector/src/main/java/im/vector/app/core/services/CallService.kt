@@ -32,6 +32,7 @@ import im.vector.app.features.call.VectorCallActivity
 import im.vector.app.features.call.telecom.CallConnection
 import im.vector.app.features.call.webrtc.WebRtcCall
 import im.vector.app.features.call.webrtc.WebRtcCallManager
+import im.vector.app.features.call.webrtc.getOpponentAsMatrixItem
 import im.vector.app.features.home.AvatarRenderer
 import im.vector.app.features.notifications.NotificationUtils
 import im.vector.app.features.popup.IncomingCallAlert
@@ -176,7 +177,7 @@ class CallService : VectorService() {
         }
         alertManager.postVectorAlert(incomingCallAlert)
         val notification = notificationUtils.buildIncomingCallNotification(
-                mxCall = call.mxCall,
+                call = call,
                 title = opponentMatrixItem?.getBestName() ?: call.mxCall.opponentUserId,
                 fromBg = fromBg
         )
@@ -207,7 +208,7 @@ class CallService : VectorService() {
     private fun showCallScreen(call: WebRtcCall, mode: String) {
         val intent = VectorCallActivity.newIntent(
                 context = this,
-                mxCall = call.mxCall,
+                call = call,
                 mode = mode
         )
         startActivity(intent)
@@ -221,7 +222,7 @@ class CallService : VectorService() {
         val opponentMatrixItem = getOpponentMatrixItem(call)
         Timber.v("displayOutgoingCallNotification : display the dedicated notification")
         val notification = notificationUtils.buildOutgoingRingingCallNotification(
-                mxCall = call.mxCall,
+                call = call,
                 title = opponentMatrixItem?.getBestName() ?: call.mxCall.opponentUserId
         )
         if (knownCalls.isEmpty()) {
@@ -244,7 +245,7 @@ class CallService : VectorService() {
         val opponentMatrixItem = getOpponentMatrixItem(call)
         alertManager.cancelAlert(callId)
         val notification = notificationUtils.buildPendingCallNotification(
-                mxCall = call.mxCall,
+                call = call,
                 title = opponentMatrixItem?.getBestName() ?: call.mxCall.opponentUserId
         )
         if (knownCalls.isEmpty()) {
@@ -275,7 +276,9 @@ class CallService : VectorService() {
     }
 
     private fun getOpponentMatrixItem(call: WebRtcCall): MatrixItem? {
-        return vectorComponent().currentSession().getUser(call.mxCall.opponentUserId)?.toMatrixItem()
+        return vectorComponent().activeSessionHolder().getSafeActiveSession()?.let {
+            call.getOpponentAsMatrixItem(it)
+        }
     }
 
     companion object {

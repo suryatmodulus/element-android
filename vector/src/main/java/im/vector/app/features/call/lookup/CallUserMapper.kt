@@ -24,7 +24,6 @@ import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.events.model.toContent
 import org.matrix.android.sdk.api.session.events.model.toModel
 import org.matrix.android.sdk.api.session.room.Room
-import org.matrix.android.sdk.api.session.room.members.roomMemberQueryParams
 import org.matrix.android.sdk.api.session.room.model.create.CreateRoomParams
 import org.matrix.android.sdk.internal.util.awaitCallback
 import javax.inject.Inject
@@ -50,17 +49,21 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
         return virtualRoomEvent?.content?.toModel<RoomVirtualContent>()?.nativeRoom
     }
 
-    suspend fun getOrCreateVirtualRoomForRoom(roomId: String): String? {
-        val userId = session.getRoom(roomId)?.getRoomMembers(roomMemberQueryParams {})?.firstOrNull()?.userId ?: return null
-        val virtualUser = userToVirtualUser(userId) ?: return null
-        val virtualRoomId = ensureVirtualRoomExists(virtualUser, roomId)
-        session.getRoom(virtualRoomId)?.markVirtual()
+    suspend fun getOrCreateVirtualRoomForRoom(roomId: String, opponentUserId: String): String? {
+        protocolsChecker.awaitCheckProtocols()
+        if (!protocolsChecker.supportVirtualRooms) return null
+        val virtualUser = userToVirtualUser(opponentUserId) ?: return null
+        val virtualRoomId = tryOrNull {
+            ensureVirtualRoomExists(virtualUser, roomId)
+        } ?: return null
+        session.getRoom(virtualRoomId)?.markVirtual(roomId)
         return virtualRoomId
     }
 
     fun isVirtualRoom(roomId: String): Boolean {
-        if (nativeRoomForVirtualRoom(roomId) != null) return true
+        if (!protocolsChecker.supportVirtualRooms) return false
         if (virtualRoomIdCache.contains(roomId)) return true
+        if (nativeRoomForVirtualRoom(roomId) != null) return true
         // also look in the create event for the claimed native room ID, which is the only
         // way we can recognise a virtual room we've created when it first arrives down
         // our stream. We don't trust this in general though, as it could be faked by an
@@ -86,7 +89,7 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
                 // It's a virtual room with a matching native room, so set the room account data. This
                 // will make sure we know where how to map calls and also allow us know not to display
                 // it in the future.
-                invitedRoom.markVirtual()
+                invitedRoom.markVirtual(nativeRoomId)
                 // also auto-join the virtual room if we have a matching native room
                 // (possibly we should only join if we've also joined the native room, then we'd also have
                 // to make sure we joined virtual rooms on joining a native one)
@@ -105,8 +108,8 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
         return results.firstOrNull()?.userId
     }
 
-    private suspend fun Room.markVirtual() {
-        val virtualRoomContent = RoomVirtualContent(nativeRoom = roomId)
+    private suspend fun Room.markVirtual(nativeRoomId: String) {
+        val virtualRoomContent = RoomVirtualContent(nativeRoom = nativeRoomId)
         updateAccountData(EVENT_TYPE_VIRTUAL_ROOM, virtualRoomContent.toContent())
     }
 

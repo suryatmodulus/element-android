@@ -21,6 +21,7 @@ import im.vector.app.features.call.webrtc.WebRtcCallManager
 import im.vector.app.features.createdirect.DirectRoomHelper
 import org.matrix.android.sdk.api.extensions.tryOrNull
 import org.matrix.android.sdk.api.session.Session
+import java.lang.IllegalStateException
 import javax.inject.Inject
 
 class DialPadLookup @Inject constructor(
@@ -33,9 +34,7 @@ class DialPadLookup @Inject constructor(
     data class Result(val userId: String, val roomId: String)
 
     suspend fun lookupPhoneNumber(phoneNumber: String): Result {
-        val thirdPartyUser = tryOrNull {
-            session.pstnLookup(phoneNumber, webRtcCallManager.supportedPSTNProtocol).firstOrNull()
-        } ?: throw Failure()
+        val thirdPartyUser = session.pstnLookup(phoneNumber, webRtcCallManager.supportedPSTNProtocol).firstOrNull() ?: throw IllegalStateException()
         val roomId = directRoomHelper.ensureDMExists(thirdPartyUser.userId)
         return Result(userId = thirdPartyUser.userId, roomId = roomId)
     }

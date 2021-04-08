@@ -46,6 +46,7 @@ import im.vector.app.databinding.ActivityCallBinding
 import im.vector.app.features.call.dialpad.CallDialPadBottomSheet
 import im.vector.app.features.call.dialpad.DialPadFragment
 import im.vector.app.features.call.utils.EglUtils
+import im.vector.app.features.call.webrtc.WebRtcCall
 import im.vector.app.features.call.webrtc.WebRtcCallManager
 import im.vector.app.features.home.AvatarRenderer
 import im.vector.app.features.home.room.detail.RoomDetailActivity
@@ -277,7 +278,7 @@ class VectorCallActivity : VectorBaseActivity<ActivityCallBinding>(), CallContro
         views.otherKnownCallAvatarView.setOnClickListener {
             withState(callViewModel) {
                 val otherCall = callManager.getCallById(it.otherKnownCallInfo?.callId ?: "") ?: return@withState
-                startActivity(newIntent(this, otherCall.mxCall, null))
+                startActivity(newIntent(this, otherCall, null))
                 finish()
             }
         }
@@ -365,11 +366,11 @@ class VectorCallActivity : VectorBaseActivity<ActivityCallBinding>(), CallContro
         const val INCOMING_RINGING = "INCOMING_RINGING"
         const val INCOMING_ACCEPT = "INCOMING_ACCEPT"
 
-        fun newIntent(context: Context, mxCall: MxCallDetail, mode: String?): Intent {
+        fun newIntent(context: Context, call: WebRtcCall, mode: String?): Intent {
             return Intent(context, VectorCallActivity::class.java).apply {
                 // what could be the best flags?
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                putExtra(MvRx.KEY_ARG, CallArgs(mxCall.roomId, mxCall.callId, mxCall.opponentUserId, !mxCall.isOutgoing, mxCall.isVideoCall))
+                putExtra(MvRx.KEY_ARG, CallArgs(call.nativeRoomId, call.callId, call.mxCall.opponentUserId, !call.mxCall.isOutgoing, call.mxCall.isVideoCall))
                 putExtra(EXTRA_MODE, mode)
             }
         }

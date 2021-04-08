@@ -16,7 +16,7 @@
 
 package org.matrix.android.sdk.api.session.room.model.call
 
-interface CallSignallingContent {
+interface CallSignalingContent {
     /**
      * Required. A unique identifier for the call.
      */

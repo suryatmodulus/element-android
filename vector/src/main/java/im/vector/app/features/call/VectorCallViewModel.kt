@@ -30,6 +30,7 @@ import im.vector.app.core.platform.VectorViewModel
 import im.vector.app.features.call.audio.CallAudioManager
 import im.vector.app.features.call.webrtc.WebRtcCall
 import im.vector.app.features.call.webrtc.WebRtcCallManager
+import im.vector.app.features.call.webrtc.getOpponentAsMatrixItem
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -152,7 +153,7 @@ class VectorCallViewModel @AssistedInject constructor(
             if (otherCall == null) {
                 copy(otherKnownCallInfo = null)
             } else {
-                val otherUserItem: MatrixItem? = session.getUser(otherCall.mxCall.opponentUserId)?.toMatrixItem()
+                val otherUserItem = otherCall.getOpponentAsMatrixItem(session)
                 copy(otherKnownCallInfo = VectorCallViewState.CallInfo(otherCall.callId, otherUserItem))
             }
         }
@@ -167,7 +168,7 @@ class VectorCallViewModel @AssistedInject constructor(
         } else {
             call = webRtcCall
             callManager.addCurrentCallListener(currentCallListener)
-            val item: MatrixItem? = session.getUser(webRtcCall.mxCall.opponentUserId)?.toMatrixItem()
+            val item  = webRtcCall.getOpponentAsMatrixItem(session)
             webRtcCall.addListener(callListener)
             val currentSoundDevice = callManager.audioManager.selectedDevice
             if (currentSoundDevice == CallAudioManager.Device.PHONE) {

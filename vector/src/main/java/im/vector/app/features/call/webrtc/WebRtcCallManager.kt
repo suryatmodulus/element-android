@@ -24,6 +24,7 @@ import im.vector.app.ActiveSessionDataSource
 import im.vector.app.core.services.CallService
 import im.vector.app.features.call.VectorCallActivity
 import im.vector.app.features.call.audio.CallAudioManager
+import im.vector.app.features.call.lookup.CallUserMapper
 import im.vector.app.features.call.utils.EglUtils
 import im.vector.app.push.fcm.FcmHelper
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -59,7 +60,8 @@ import javax.inject.Singleton
 @Singleton
 class WebRtcCallManager @Inject constructor(
         private val context: Context,
-        private val activeSessionDataSource: ActiveSessionDataSource
+        private val activeSessionDataSource: ActiveSessionDataSource,
+        private val callUserMapper: CallUserMapper
 ) : CallListener, LifecycleObserver {
 
     private val currentSession: Session?
@@ -222,7 +224,8 @@ class WebRtcCallManager @Inject constructor(
             Timber.v("On call ended for unknown call $callId")
         }
         CallService.onCallTerminated(context, callId)
-        callsByRoomId[webRtcCall.roomId]?.remove(webRtcCall)
+        callsByRoomId[webRtcCall.signalingRoomId]?.remove(webRtcCall)
+        callsByRoomId[webRtcCall.nativeRoomId]?.remove(webRtcCall)
         if (getCurrentCall()?.callId == callId) {
             val otherCall = getCalls().lastOrNull()
             currentCall.setAndNotify(otherCall)
@@ -249,9 +252,10 @@ class WebRtcCallManager @Inject constructor(
         }
     }
 
-    fun startOutgoingCall(signalingRoomId: String, otherUserId: String, isVideoCall: Boolean) {
+    suspend fun startOutgoingCall(nativeRoomId: String, otherUserId: String, isVideoCall: Boolean) {
+        val signalingRoomId =  callUserMapper.getOrCreateVirtualRoomForRoom(nativeRoomId, otherUserId) ?: nativeRoomId
         Timber.v("## VOIP startOutgoingCall in room $signalingRoomId to $otherUserId isVideo $isVideoCall")
-        if (getCallsByRoomId(signalingRoomId).isNotEmpty()) {
+        if (getCallsByRoomId(nativeRoomId).isNotEmpty()) {
             Timber.w("## VOIP you already have a call in this room")
             return
         }
@@ -265,7 +269,7 @@ class WebRtcCallManager @Inject constructor(
         }
         getCurrentCall()?.updateRemoteOnHold(onHold = true)
         val mxCall = currentSession?.callSignalingService()?.createOutgoingCall(signalingRoomId, otherUserId, isVideoCall) ?: return
-        val webRtcCall = createWebRtcCall(mxCall)
+        val webRtcCall = createWebRtcCall(mxCall, nativeRoomId)
         currentCall.setAndNotify(webRtcCall)
 
         CallService.onOutgoingCallRinging(
@@ -273,7 +277,7 @@ class WebRtcCallManager @Inject constructor(
                 callId = mxCall.callId)
 
         // start the activity now
-        context.startActivity(VectorCallActivity.newIntent(context, mxCall, VectorCallActivity.OUTGOING_CREATED))
+        context.startActivity(VectorCallActivity.newIntent(context, webRtcCall, VectorCallActivity.OUTGOING_CREATED))
     }
 
     override fun onCallIceCandidateReceived(mxCall: MxCall, iceCandidatesContent: CallCandidatesContent) {
@@ -285,9 +289,10 @@ class WebRtcCallManager @Inject constructor(
         call.onCallIceCandidateReceived(iceCandidatesContent)
     }
 
-    private fun createWebRtcCall(mxCall: MxCall): WebRtcCall {
+    private fun createWebRtcCall(mxCall: MxCall, nativeRoomId: String): WebRtcCall {
         val webRtcCall = WebRtcCall(
                 mxCall = mxCall,
+                nativeRoomId = nativeRoomId,
                 rootEglBase = rootEglBase,
                 context = context,
                 dispatcher = dispatcher,
@@ -301,6 +306,8 @@ class WebRtcCallManager @Inject constructor(
         )
         advertisedCalls.add(mxCall.callId)
         callsByCallId[mxCall.callId] = webRtcCall
+        callsByRoomId.getOrPut(nativeRoomId) { ArrayList(1) }
+                .add(webRtcCall)
         callsByRoomId.getOrPut(mxCall.roomId) { ArrayList(1) }
                 .add(webRtcCall)
         if (getCurrentCall() == null) {
@@ -310,12 +317,13 @@ class WebRtcCallManager @Inject constructor(
     }
 
     fun endCallForRoom(roomId: String, originatedByMe: Boolean = true) {
-        callsByRoomId[roomId]?.forEach { it.endCall(originatedByMe) }
+        callsByRoomId[roomId]?.firstOrNull()?.endCall(originatedByMe)
     }
 
     override fun onCallInviteReceived(mxCall: MxCall, callInviteContent: CallInviteContent) {
         Timber.v("## VOIP onCallInviteReceived callId ${mxCall.callId}")
-        if (getCallsByRoomId(mxCall.roomId).isNotEmpty()) {
+        val nativeRoomId = callUserMapper.nativeRoomForVirtualRoom(mxCall.roomId) ?: mxCall.roomId
+        if (getCallsByRoomId(nativeRoomId).isNotEmpty()) {
             Timber.w("## VOIP you already have a call in this room")
             return
         }
@@ -324,7 +332,7 @@ class WebRtcCallManager @Inject constructor(
             // Just ignore, maybe we could answer from other session?
             return
         }
-        createWebRtcCall(mxCall).apply {
+        createWebRtcCall(mxCall, nativeRoomId).apply {
             offerSdp = callInviteContent.offer
         }
         // Start background service with notification
@@ -401,4 +409,6 @@ class WebRtcCallManager @Inject constructor(
         Timber.v("## VOIP onCallManagedByOtherSession: $callId")
         onCallEnded(callId)
     }
+
+
 }
