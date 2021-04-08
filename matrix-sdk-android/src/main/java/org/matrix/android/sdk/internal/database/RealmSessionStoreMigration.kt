@@ -20,6 +20,7 @@ import io.realm.DynamicRealm
 import io.realm.FieldAttribute
 import io.realm.RealmMigration
 import io.realm.RealmObjectSchema
+import org.matrix.android.sdk.api.session.room.model.VersioningState
 import org.matrix.android.sdk.api.session.room.model.tag.RoomTag
 import org.matrix.android.sdk.internal.database.model.EditAggregatedSummaryEntityFields
 import org.matrix.android.sdk.internal.database.model.EditionOfEventFields
@@ -201,12 +202,20 @@ class RealmSessionStoreMigration @Inject constructor() : RealmMigration {
         val roomAccountDataSchema = realm.schema.create("RoomAccountDataEntity")
                 .setIsEmbedded(true)
                 .addField(RoomAccountDataEntityFields.CONTENT_STR, String::class.java)
-                .addField(RoomAccountDataEntityFields.TYPE, String::class.java)
-                .addIndex(RoomAccountDataEntityFields.TYPE)
+                .addField(RoomAccountDataEntityFields.TYPE, String::class.java,  FieldAttribute.INDEXED)
 
         realm.schema.get("RoomEntity")
                 ?.addRealmListField(RoomEntityFields.ACCOUNT_DATA.`$`, roomAccountDataSchema)
+
+        realm.schema.get("RoomSummaryEntity")
+                ?.addField(RoomSummaryEntityFields.IS_HIDDEN_FROM_USER, Boolean::class.java, FieldAttribute.INDEXED)
+                ?.transform {
+                    val isHiddenFromUser = it.getString(RoomSummaryEntityFields.VERSIONING_STATE_STR) == VersioningState.UPGRADED_ROOM_JOINED.name
+                    it.setBoolean(RoomSummaryEntityFields.IS_HIDDEN_FROM_USER, isHiddenFromUser)
+                }
+
     }
+
 
     private fun RealmObjectSchema.setIsEmbedded(isEmbedded: Boolean): RealmObjectSchema {
         return apply {

@@ -166,7 +166,7 @@ internal class RoomSummaryDataSource @Inject constructor(@SessionDatabase privat
         query.process(RoomSummaryEntityFields.DISPLAY_NAME, queryParams.displayName)
         query.process(RoomSummaryEntityFields.CANONICAL_ALIAS, queryParams.canonicalAlias)
         query.process(RoomSummaryEntityFields.MEMBERSHIP_STR, queryParams.memberships)
-        query.notEqualTo(RoomSummaryEntityFields.VERSIONING_STATE_STR, VersioningState.UPGRADED_ROOM_JOINED.name)
+        query.equalTo(RoomSummaryEntityFields.IS_HIDDEN_FROM_USER, false)
 
         queryParams.roomCategoryFilter?.let {
             when (it) {

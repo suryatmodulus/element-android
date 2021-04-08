@@ -24,13 +24,12 @@ import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.events.model.toContent
 import org.matrix.android.sdk.api.session.events.model.toModel
 import org.matrix.android.sdk.api.session.room.Room
+import org.matrix.android.sdk.api.session.room.accountdata.RoomAccountDataTypes
 import org.matrix.android.sdk.api.session.room.model.create.CreateRoomParams
 import org.matrix.android.sdk.internal.util.awaitCallback
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
-
-const val EVENT_TYPE_VIRTUAL_ROOM = "im.vector.is_virtual_room"
 
 @Singleton
 class CallUserMapper @Inject constructor(private val _session: Provider<Session>) {
@@ -45,7 +44,7 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
 
     fun nativeRoomForVirtualRoom(roomId: String): String? {
         val virtualRoom = session.getRoom(roomId) ?: return null
-        val virtualRoomEvent = virtualRoom.getAccountDataEvent(EVENT_TYPE_VIRTUAL_ROOM)
+        val virtualRoomEvent = virtualRoom.getAccountDataEvent(RoomAccountDataTypes.EVENT_TYPE_VIRTUAL_ROOM)
         return virtualRoomEvent?.content?.toModel<RoomVirtualContent>()?.nativeRoom
     }
 
@@ -73,7 +72,7 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
         // we only look at this for rooms we created (so inviters can't just cause rooms
         // to be invisible)
         if (createEvent == null || createEvent.senderId != session.myUserId) return false
-        return createEvent.content?.containsKey(EVENT_TYPE_VIRTUAL_ROOM).orFalse()
+        return createEvent.content?.containsKey(RoomAccountDataTypes.EVENT_TYPE_VIRTUAL_ROOM).orFalse()
     }
 
     suspend fun onNewInvitedRoom(invitedRoomId: String) {
@@ -110,7 +109,7 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
 
     private suspend fun Room.markVirtual(nativeRoomId: String) {
         val virtualRoomContent = RoomVirtualContent(nativeRoom = nativeRoomId)
-        updateAccountData(EVENT_TYPE_VIRTUAL_ROOM, virtualRoomContent.toContent())
+        updateAccountData(RoomAccountDataTypes.EVENT_TYPE_VIRTUAL_ROOM, virtualRoomContent.toContent())
     }
 
     private suspend fun ensureVirtualRoomExists(userId: String, nativeRoomId: String): String {
@@ -122,7 +121,7 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
             val roomParams = CreateRoomParams().apply {
                 invitedUserIds.add(userId)
                 setDirectMessage()
-                creationContent[EVENT_TYPE_VIRTUAL_ROOM] = nativeRoomId
+                creationContent[RoomAccountDataTypes.EVENT_TYPE_VIRTUAL_ROOM] = nativeRoomId
             }
             roomId = awaitCallback {
                 session.createRoom(roomParams, it)

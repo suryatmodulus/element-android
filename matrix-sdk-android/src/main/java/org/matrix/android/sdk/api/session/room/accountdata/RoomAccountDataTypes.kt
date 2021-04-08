@@ -17,5 +17,5 @@
 package org.matrix.android.sdk.api.session.room.accountdata
 
 object RoomAccountDataTypes {
-
+    const val EVENT_TYPE_VIRTUAL_ROOM = "im.vector.is_virtual_room"
 }
