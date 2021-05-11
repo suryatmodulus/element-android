@@ -19,7 +19,6 @@ package org.matrix.android.sdk.internal.database
 import io.realm.DynamicRealm
 import io.realm.FieldAttribute
 import io.realm.RealmMigration
-import io.realm.RealmObjectSchema
 import org.matrix.android.sdk.api.session.room.model.VersioningState
 import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.room.model.RoomJoinRulesContent
@@ -296,8 +295,5 @@ class RealmSessionStoreMigration @Inject constructor() : RealmMigration {
                 }
 
         roomAccountDataSchema.isEmbedded = true
-
     }
-
-
 }

@@ -26,7 +26,6 @@ import org.matrix.android.sdk.api.session.events.model.toModel
 import org.matrix.android.sdk.api.session.room.Room
 import org.matrix.android.sdk.api.session.room.accountdata.RoomAccountDataTypes
 import org.matrix.android.sdk.api.session.room.model.create.CreateRoomParams
-import org.matrix.android.sdk.internal.util.awaitCallback
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton

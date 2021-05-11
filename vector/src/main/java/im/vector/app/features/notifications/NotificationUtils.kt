@@ -57,7 +57,6 @@ import im.vector.app.features.home.room.detail.RoomDetailActivity
 import im.vector.app.features.home.room.detail.RoomDetailArgs
 import im.vector.app.features.settings.VectorPreferences
 import im.vector.app.features.settings.troubleshoot.TestNotificationReceiver
-import org.matrix.android.sdk.api.session.call.MxCall
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton

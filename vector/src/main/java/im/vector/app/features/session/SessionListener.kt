@@ -53,5 +53,4 @@ class SessionListener @Inject constructor(private val callUserMapper: CallUserMa
     override fun onClearCache(session: Session) {
         session.coroutineScope.coroutineContext.cancelChildren()
     }
-
 }

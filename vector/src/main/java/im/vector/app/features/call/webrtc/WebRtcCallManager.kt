@@ -409,6 +409,4 @@ class WebRtcCallManager @Inject constructor(
         Timber.v("## VOIP onCallManagedByOtherSession: $callId")
         onCallEnded(callId)
     }
-
-
 }

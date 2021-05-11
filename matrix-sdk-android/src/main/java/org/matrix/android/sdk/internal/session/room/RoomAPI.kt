@@ -39,7 +39,6 @@ import org.matrix.android.sdk.internal.session.room.timeline.EventContextRespons
 import org.matrix.android.sdk.internal.session.room.timeline.PaginationResponse
 import org.matrix.android.sdk.internal.session.room.typing.TypingBody
 import retrofit2.http.Body
-import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.POST

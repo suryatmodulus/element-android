@@ -23,7 +23,7 @@ import org.matrix.android.sdk.api.session.call.PROTOCOL_SIP_VIRTUAL
 import org.matrix.android.sdk.api.session.thirdparty.model.ThirdPartyUser
 
 suspend fun Session.pstnLookup(phoneNumber: String, protocol: String?): List<ThirdPartyUser> {
-    if(protocol == null) return emptyList()
+    if (protocol == null) return emptyList()
     return tryOrNull {
         thirdPartyService().getThirdPartyUser(
                 protocol = protocol,

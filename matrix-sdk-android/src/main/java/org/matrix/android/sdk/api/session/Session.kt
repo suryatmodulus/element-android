@@ -268,7 +268,6 @@ interface Session :
          * - a M_CONSENT_NOT_GIVEN error has been received from the homeserver
          */
         fun onGlobalError(session: Session, globalError: GlobalError)
-
     }
 
     val sharedSecretStorageService: SharedSecretStorageService

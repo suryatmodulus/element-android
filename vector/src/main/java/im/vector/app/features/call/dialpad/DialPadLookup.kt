@@ -19,7 +19,6 @@ package im.vector.app.features.call.dialpad
 import im.vector.app.features.call.lookup.pstnLookup
 import im.vector.app.features.call.webrtc.WebRtcCallManager
 import im.vector.app.features.createdirect.DirectRoomHelper
-import org.matrix.android.sdk.api.extensions.tryOrNull
 import org.matrix.android.sdk.api.session.Session
 import java.lang.IllegalStateException
 import javax.inject.Inject
