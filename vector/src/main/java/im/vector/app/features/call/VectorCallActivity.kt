@@ -79,7 +79,6 @@ class VectorCallActivity : VectorBaseActivity<ActivityCallBinding>(), CallContro
     @Inject lateinit var avatarRenderer: AvatarRenderer
 
     override fun injectWith(injector: ScreenComponent) {
-        super.injectWith(injector)
         injector.inject(this)
     }
 

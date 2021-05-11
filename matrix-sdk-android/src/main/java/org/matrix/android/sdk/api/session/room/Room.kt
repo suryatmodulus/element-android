@@ -35,6 +35,7 @@ import org.matrix.android.sdk.api.session.room.timeline.TimelineService
 import org.matrix.android.sdk.api.session.room.typing.TypingService
 import org.matrix.android.sdk.api.session.room.uploads.UploadsService
 import org.matrix.android.sdk.api.session.search.SearchResult
+import org.matrix.android.sdk.api.session.space.Space
 import org.matrix.android.sdk.api.util.Optional
 
 /**
@@ -93,4 +94,9 @@ interface Room :
                        beforeLimit: Int,
                        afterLimit: Int,
                        includeProfile: Boolean): SearchResult
+
+    /**
+     * Use this room as a Space, if the type is correct.
+     */
+    fun asSpace(): Space?
 }

@@ -49,6 +49,7 @@ import org.matrix.android.sdk.internal.database.query.where
 import org.matrix.android.sdk.internal.di.MoshiProvider
 import org.matrix.android.sdk.internal.di.UserId
 import org.matrix.android.sdk.internal.extensions.clearWith
+import org.matrix.android.sdk.internal.session.events.getFixedRoomMemberContent
 import org.matrix.android.sdk.internal.session.initsync.ProgressReporter
 import org.matrix.android.sdk.internal.session.initsync.mapWithProgress
 import org.matrix.android.sdk.internal.session.initsync.reportSubtask
@@ -94,8 +95,14 @@ internal class RoomSyncHandler @Inject constructor(private val readReceiptHandle
         handleRoomSync(realm, HandlingStrategy.JOINED(roomsSyncResponse.join), isInitialSync, aggregator, reporter)
         handleRoomSync(realm, HandlingStrategy.INVITED(roomsSyncResponse.invite), isInitialSync, aggregator, reporter)
         handleRoomSync(realm, HandlingStrategy.LEFT(roomsSyncResponse.leave), isInitialSync, aggregator, reporter)
+
+        // post room sync validation
+//        roomSummaryUpdater.validateSpaceRelationship(realm)
     }
 
+    fun postSyncSpaceHierarchyHandle(realm: Realm) {
+        roomSummaryUpdater.validateSpaceRelationship(realm)
+    }
     // PRIVATE METHODS *****************************************************************************
 
     private fun handleRoomSync(realm: Realm,
@@ -211,6 +218,7 @@ internal class RoomSyncHandler @Inject constructor(private val readReceiptHandle
                 val ageLocalTs = event.unsignedData?.age?.let { syncLocalTimestampMillis - it }
                 val eventEntity = event.toEntity(roomId, SendState.SYNCED, ageLocalTs).copyToRealmOrIgnore(realm, insertType)
                 CurrentStateEventEntity.getOrCreate(realm, roomId, event.stateKey, event.type).apply {
+                    // Timber.v("## Space state event: $eventEntity")
                     eventId = event.eventId
                     root = eventEntity
                 }
@@ -407,6 +415,7 @@ internal class RoomSyncHandler @Inject constructor(private val readReceiptHandle
 
     private fun decryptIfNeeded(event: Event, roomId: String) {
         try {
+            // Event from sync does not have roomId, so add it to the event first
             val result = cryptoService.decryptEvent(event.copy(roomId = roomId), "")
             event.mxDecryptionResult = OlmDecryptionResult(
                     payload = result.clearEvent,
@@ -454,19 +463,5 @@ internal class RoomSyncHandler @Inject constructor(private val readReceiptHandle
 
     private fun handleRoomAccountDataEvents(realm: Realm, roomId: String, accountData: RoomSyncAccountData) {
         roomAccountDataHandler.handle(realm, roomId, accountData)
-    }
-
-    private fun Event.getFixedRoomMemberContent(): RoomMemberContent? {
-        val content = content.toModel<RoomMemberContent>()
-        // if user is leaving, we should grab his last name and avatar from prevContent
-        return if (content?.membership?.isLeft() == true) {
-            val prevContent = resolvedPrevContent().toModel<RoomMemberContent>()
-            content.copy(
-                    displayName = prevContent?.displayName,
-                    avatarUrl = prevContent?.avatarUrl
-            )
-        } else {
-            content
-        }
     }
 }

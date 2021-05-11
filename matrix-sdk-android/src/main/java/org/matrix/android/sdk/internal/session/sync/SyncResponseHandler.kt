@@ -135,6 +135,11 @@ internal class SyncResponseHandler @Inject constructor(
 
         Timber.v("On sync completed")
         cryptoSyncHandler.onSyncCompleted(syncResponse)
+
+        // post sync stuffs
+        monarchy.writeAsync {
+            roomSyncHandler.postSyncSpaceHierarchyHandle(it)
+        }
     }
 
     private fun dispatchInvitedRoom(roomsSyncResponse: RoomsSyncResponse) {

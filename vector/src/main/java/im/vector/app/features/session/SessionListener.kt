@@ -23,6 +23,7 @@ import im.vector.app.core.utils.LiveEvent
 import im.vector.app.features.call.lookup.CallUserMapper
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancelChildren
 import org.matrix.android.sdk.api.failure.GlobalError
 import org.matrix.android.sdk.api.session.Session
 import javax.inject.Inject
@@ -35,7 +36,7 @@ class SessionListener @Inject constructor(private val callUserMapper: CallUserMa
     val globalErrorLiveData: LiveData<LiveEvent<GlobalError>>
         get() = _globalErrorLiveData
 
-    override fun onGlobalError(globalError: GlobalError) {
+    override fun onGlobalError(session: Session, globalError: GlobalError) {
         _globalErrorLiveData.postLiveEvent(globalError)
     }
 
@@ -43,6 +44,14 @@ class SessionListener @Inject constructor(private val callUserMapper: CallUserMa
         GlobalScope.launch {
             callUserMapper.onNewInvitedRoom(roomId)
         }
+    }
+
+    override fun onSessionStopped(session: Session) {
+        session.coroutineScope.coroutineContext.cancelChildren()
+    }
+
+    override fun onClearCache(session: Session) {
+        session.coroutineScope.coroutineContext.cancelChildren()
     }
 
 }

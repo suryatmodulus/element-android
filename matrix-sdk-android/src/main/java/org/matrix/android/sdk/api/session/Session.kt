@@ -30,6 +30,7 @@ import org.matrix.android.sdk.api.session.call.CallSignalingService
 import org.matrix.android.sdk.api.session.content.ContentUploadStateTracker
 import org.matrix.android.sdk.api.session.content.ContentUrlResolver
 import org.matrix.android.sdk.api.session.crypto.CryptoService
+import org.matrix.android.sdk.api.session.events.EventService
 import org.matrix.android.sdk.api.session.file.ContentDownloadStateTracker
 import org.matrix.android.sdk.api.session.file.FileService
 import org.matrix.android.sdk.api.session.group.GroupService
@@ -47,6 +48,7 @@ import org.matrix.android.sdk.api.session.search.SearchService
 import org.matrix.android.sdk.api.session.securestorage.SecureStorageService
 import org.matrix.android.sdk.api.session.securestorage.SharedSecretStorageService
 import org.matrix.android.sdk.api.session.signout.SignOutService
+import org.matrix.android.sdk.api.session.space.SpaceService
 import org.matrix.android.sdk.api.session.sync.FilterService
 import org.matrix.android.sdk.api.session.sync.SyncState
 import org.matrix.android.sdk.api.session.terms.TermsService
@@ -68,6 +70,7 @@ interface Session :
         SignOutService,
         FilterService,
         TermsService,
+        EventService,
         ProfileService,
         PushRuleService,
         PushersService,
@@ -226,6 +229,11 @@ interface Session :
     fun thirdPartyService(): ThirdPartyService
 
     /**
+     * Returns the space service associated with the session
+     */
+    fun spaceService(): SpaceService
+
+    /**
      * Add a listener to the session.
      * @param listener the listener to add.
      */
@@ -247,19 +255,19 @@ interface Session :
     /**
      * A global session listener to get notified for some events.
      */
-    interface Listener {
+    interface Listener : SessionLifecycleObserver {
+
+        /**
+         * Called when the session received new invites to room so the client can react to it once.
+         */
+        fun onNewInvitedRoom(roomId: String) = Unit
 
         /**
          * Possible cases:
          * - The access token is not valid anymore,
          * - a M_CONSENT_NOT_GIVEN error has been received from the homeserver
          */
-        fun onGlobalError(globalError: GlobalError) = Unit
-
-        /**
-         * Called when the session received new invites to room so the client can react to it once.
-         */
-        fun onNewInvitedRoom(roomId: String) = Unit
+        fun onGlobalError(session: Session, globalError: GlobalError)
 
     }
 

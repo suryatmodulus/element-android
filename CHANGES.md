@@ -1,8 +1,75 @@
-Changes in Element 1.1.4 (2021-XX-XX)
+Changes in Element 1.1.7 (2021-XX-XX)
 ===================================================
 
 Features ✨:
+ - Spaces beta
+
+Improvements 🙌:
+ - Add ability to install APK from directly from Element (#2381)
+ - Delete and react to stickers (#3250)
+ - Compress video before sending (#442)
+ - Improve file too big error detection (#3245)
+ - User can now select video when selecting Gallery to send attachments to a room
+ - Add option to record a video from the camera
+ - Add the public icon on the rooms in the room list (#3292)
+
+Bugfix 🐛:
+ - Message states cosmetic changes (#3007)
+ - Fix exception in rxSingle (#3180)
+ - Do not invite the current user when creating a room (#3123)
+ - Fix color issues when the system theme is changed (#2738)
+ - Fix issues on Android 11 (#3067)
+ - Fix issue when opening encrypted files (#3186)
+ - Fix wording issue (#3242)
+ - Fix missing sender information after edits (#3184)
+ - Fix read marker not updating automatically (#3267)
+ - Sent video does not contains duration (#3272)
+ - Properly clean the back stack if the user cancel registration when waiting for email validation
+ - Fix read marker visibility/position when filtering some events 
+ - Fix user invitation in case of restricted profile api (#3306)
+
+Translations 🗣:
  -
+
+SDK API changes ⚠️:
+ - RegistrationWizard.createAccount() parameters are now all optional, following Matrix spec (#3205)
+
+Build 🧱:
+ - Upgrade to gradle 7
+ - https://github.com/Piasy/BigImageViewer is now hosted on mavenCentral()
+ - Upgrade Realm to version 10.4.0
+
+Test:
+ -
+
+Other changes:
+ - New store descriptions
+ - `master` branch has been renamed to `main`. To apply change to your dev environment, run:
+```sh
+git branch -m master main
+git fetch origin
+git branch -u origin/main main
+# And optionally
+git remote prune origin
+```
+ - Allow cleartext (non-SSL) connections to Matrix servers on LAN hosts (#3166)
+
+Changes in Element 1.1.6 (2021-04-16)
+===================================================
+
+Bugfix 🐛:
+ - Fix crash on the timeline
+ - App crashes on "troubleshoot notifications" button (#3187)
+
+Changes in Element 1.1.5 (2021-04-15)
+===================================================
+
+Bugfix 🐛:
+ - Fix crash during Realm migration
+ - Fix crash when playing video (#3179)
+
+Changes in Element 1.1.4 (2021-04-09)
+===================================================
 
 Improvements 🙌:
  - Split network request `/keys/query` into smaller requests (250 users max) (#2925)
@@ -14,26 +81,28 @@ Improvements 🙌:
  - Update reactions to Unicode 13.1 (#2998)
  - Be more robust when parsing some enums
  - Improve timeline filtering (dissociate membership and profile events, display hidden events when highlighted, fix hidden item/read receipts behavior)
+ - Add better support for empty room name fallback (#3106)
  - Room list improvements (paging)
+ - Fix quick click action (#3127)
+ - Get Event after a Push for a faster notification display in some conditions
+ - Always try to retry Http requests in case of 429 (#1300)
+ - registration availability endpoint added to matrix-sdk
 
 Bugfix 🐛:
  - Fix bad theme change for the MainActivity
  - Handle encrypted reactions (#2509)
  - Disable URL preview for some domains (#2995)
  - Fix avatar rendering for DMs, after initial sync (#2693)
-
-Translations 🗣:
- -
+ - Fix mandatory parameter in API (#3065)
+ - If signout request fails, do not start LoginActivity, but restart the app (#3099)
+ - Retain keyword order in emoji import script, and update the generated file (#3147)
 
 SDK API changes ⚠️:
  - Several Services have been migrated to coroutines (#2449)
  - Removes filtering options on Timeline.
 
 Build 🧱:
- -
-
-Test:
- -
+ - Properly exclude gms dependencies in fdroid build flavour which were pulled in through the jitsi SDK (#3125)
 
 Other changes:
  - Add version details on the login screen, in debug or developer mode

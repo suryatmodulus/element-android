@@ -36,6 +36,9 @@ internal class RoomSyncAccountDataHandler @Inject constructor(private val roomTa
                                                               private val roomFullyReadHandler: RoomFullyReadHandler) {
 
     fun handle(realm: Realm, roomId: String, accountData: RoomSyncAccountData) {
+        if (accountData.events.isNullOrEmpty()) {
+            return
+        }
         val roomEntity = RoomEntity.getOrCreate(realm, roomId)
         for (event in accountData.events) {
             val eventType = event.getClearType()

@@ -92,9 +92,7 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
                 // also auto-join the virtual room if we have a matching native room
                 // (possibly we should only join if we've also joined the native room, then we'd also have
                 // to make sure we joined virtual rooms on joining a native one)
-                awaitCallback<Unit> {
-                    session.joinRoom(invitedRoomId, callback = it)
-                }
+                session.joinRoom(invitedRoomId)
             }
             // also put this room in the virtual room ID cache so isVirtualRoom return the right answer
             // in however long it takes for the echo of setAccountData to come down the sync
@@ -123,9 +121,7 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
                 setDirectMessage()
                 creationContent[RoomAccountDataTypes.EVENT_TYPE_VIRTUAL_ROOM] = nativeRoomId
             }
-            roomId = awaitCallback {
-                session.createRoom(roomParams, it)
-            }
+            roomId = session.createRoom(roomParams)
         }
         return roomId
     }

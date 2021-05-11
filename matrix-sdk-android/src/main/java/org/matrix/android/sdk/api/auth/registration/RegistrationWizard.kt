@@ -20,7 +20,9 @@ interface RegistrationWizard {
 
     suspend fun getRegistrationFlow(): RegistrationResult
 
-    suspend fun createAccount(userName: String, password: String, initialDeviceDisplayName: String?): RegistrationResult
+    suspend fun createAccount(userName: String?,
+                              password: String?,
+                              initialDeviceDisplayName: String?): RegistrationResult
 
     suspend fun performReCaptcha(response: String): RegistrationResult
 
@@ -35,6 +37,8 @@ interface RegistrationWizard {
     suspend fun handleValidateThreePid(code: String): RegistrationResult
 
     suspend fun checkIfEmailHasBeenValidated(delayMillis: Long): RegistrationResult
+
+    suspend fun registrationAvailable(userName: String): RegistrationAvailability
 
     val currentThreePid: String?
 
