@@ -8,7 +8,7 @@ Improvements 🙌:
  -
 
 Bugfix 🐛:
- -
+ - #+ button on lower right when looking at an empty space goes to an empty 'Explore rooms' (#3327)
 
 Translations 🗣:
  -
