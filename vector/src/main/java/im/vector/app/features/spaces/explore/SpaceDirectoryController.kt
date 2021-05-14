@@ -26,7 +26,8 @@ import im.vector.app.core.epoxy.loadingItem
 import im.vector.app.core.error.ErrorFormatter
 import im.vector.app.core.resources.ColorProvider
 import im.vector.app.core.resources.StringProvider
-import im.vector.app.core.ui.list.genericFooterItem
+import im.vector.app.core.ui.list.GenericEmptyWithActionItem
+import im.vector.app.core.ui.list.genericEmptyWithActionItem
 import im.vector.app.core.ui.list.genericPillItem
 import im.vector.app.features.home.AvatarRenderer
 import im.vector.app.features.home.room.list.spaceChildInfoItem
@@ -50,6 +51,7 @@ class SpaceDirectoryController @Inject constructor(
         fun onSpaceChildClick(spaceChildInfo: SpaceChildInfo)
         fun onRoomClick(spaceChildInfo: SpaceChildInfo)
         fun retry()
+        fun addExistingRooms(spaceId: String)
     }
 
     var listener: InteractionListener? = null
@@ -96,9 +98,23 @@ class SpaceDirectoryController @Inject constructor(
                     ?: emptyList()
 
             if (flattenChildInfo.isEmpty()) {
-                genericFooterItem {
-                    id("empty_footer")
-                    stringProvider.getString(R.string.no_result_placeholder)
+                genericEmptyWithActionItem {
+                    id("empty_res")
+                    title(stringProvider.getString(R.string.this_space_has_no_rooms))
+                    iconRes(R.drawable.ic_empty_icon_room)
+                    iconTint(colorProvider.getColorFromAttribute(R.attr.riotx_reaction_background_on))
+                    apply {
+                        if (data?.canAddRooms == true) {
+                            description(stringProvider.getString(R.string.this_space_has_no_rooms_admin))
+                            val action = GenericEmptyWithActionItem.Action(stringProvider.getString(R.string.space_add_existing_rooms))
+                            action.perform = Runnable {
+                                listener?.addExistingRooms(data.spaceId)
+                            }
+                            buttonAction(action)
+                        } else {
+                            description(stringProvider.getString(R.string.this_space_has_no_rooms_not_admin))
+                        }
+                    }
                 }
             } else {
                 flattenChildInfo.forEach { info ->
