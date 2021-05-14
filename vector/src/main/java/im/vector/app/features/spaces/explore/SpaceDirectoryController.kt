@@ -103,17 +103,15 @@ class SpaceDirectoryController @Inject constructor(
                     title(stringProvider.getString(R.string.this_space_has_no_rooms))
                     iconRes(R.drawable.ic_empty_icon_room)
                     iconTint(colorProvider.getColorFromAttribute(R.attr.riotx_reaction_background_on))
-                    apply {
-                        if (data?.canAddRooms == true) {
-                            description(stringProvider.getString(R.string.this_space_has_no_rooms_admin))
-                            val action = GenericEmptyWithActionItem.Action(stringProvider.getString(R.string.space_add_existing_rooms))
-                            action.perform = Runnable {
-                                listener?.addExistingRooms(data.spaceId)
-                            }
-                            buttonAction(action)
-                        } else {
-                            description(stringProvider.getString(R.string.this_space_has_no_rooms_not_admin))
+                    if (data?.canAddRooms == true) {
+                        description(stringProvider.getString(R.string.this_space_has_no_rooms_admin))
+                        val action = GenericEmptyWithActionItem.Action(stringProvider.getString(R.string.space_add_existing_rooms))
+                        action.perform = Runnable {
+                            listener?.addExistingRooms(data.spaceId)
                         }
+                        buttonAction(action)
+                    } else {
+                        description(stringProvider.getString(R.string.this_space_has_no_rooms_not_admin))
                     }
                 }
             } else {
