@@ -306,6 +306,4 @@ class RealmSessionStoreMigration @Inject constructor() : RealmMigration {
 
         roomAccountDataSchema.isEmbedded = true
     }
-
-
 }
