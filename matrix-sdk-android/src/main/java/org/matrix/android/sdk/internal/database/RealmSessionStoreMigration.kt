@@ -46,7 +46,7 @@ import javax.inject.Inject
 class RealmSessionStoreMigration @Inject constructor() : RealmMigration {
 
     companion object {
-        const val SESSION_STORE_SCHEMA_VERSION = 13L
+        const val SESSION_STORE_SCHEMA_VERSION = 14L
     }
 
     override fun migrate(realm: DynamicRealm, oldVersion: Long, newVersion: Long) {
@@ -65,6 +65,7 @@ class RealmSessionStoreMigration @Inject constructor() : RealmMigration {
         if (oldVersion <= 10) migrateTo11(realm)
         if (oldVersion <= 11) migrateTo12(realm)
         if (oldVersion <= 12) migrateTo13(realm)
+        if (oldVersion <= 13) migrateTo14(realm)
     }
 
     private fun migrateTo1(realm: DynamicRealm) {
@@ -280,6 +281,15 @@ class RealmSessionStoreMigration @Inject constructor() : RealmMigration {
 
     private fun migrateTo13(realm: DynamicRealm) {
         Timber.d("Step 12 -> 13")
+        // Fix issue with the nightly build. Eventually play again the migration which has been included in migrateTo12()
+        realm.schema.get("SpaceChildSummaryEntity")
+                ?.takeIf { !it.hasField(SpaceChildSummaryEntityFields.SUGGESTED) }
+                ?.addField(SpaceChildSummaryEntityFields.SUGGESTED, Boolean::class.java)
+                ?.setNullable(SpaceChildSummaryEntityFields.SUGGESTED, true)
+    }
+
+    private fun migrateTo14(realm: DynamicRealm) {
+        Timber.d("Step 13 -> 14")
         val roomAccountDataSchema = realm.schema.create("RoomAccountDataEntity")
                 .addField(RoomAccountDataEntityFields.CONTENT_STR, String::class.java)
                 .addField(RoomAccountDataEntityFields.TYPE, String::class.java,  FieldAttribute.INDEXED)
@@ -296,4 +306,6 @@ class RealmSessionStoreMigration @Inject constructor() : RealmMigration {
 
         roomAccountDataSchema.isEmbedded = true
     }
+
+
 }

@@ -33,12 +33,14 @@ import im.vector.app.databinding.BottomSheetSpaceSettingsBinding
 import im.vector.app.features.home.AvatarRenderer
 import im.vector.app.features.navigation.Navigator
 import im.vector.app.features.powerlevel.PowerLevelsObservableFactory
+import im.vector.app.features.rageshake.BugReporter
+import im.vector.app.features.rageshake.ReportType
 import im.vector.app.features.roomprofile.RoomProfileActivity
+import im.vector.app.features.session.coroutineScope
 import im.vector.app.features.settings.VectorPreferences
 import im.vector.app.features.spaces.manage.ManageType
 import im.vector.app.features.spaces.manage.SpaceManageActivity
 import io.reactivex.android.schedulers.AndroidSchedulers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 import org.matrix.android.sdk.api.session.events.model.EventType
@@ -58,6 +60,7 @@ class SpaceSettingsMenuBottomSheet : VectorBaseBottomSheetDialogFragment<BottomS
     @Inject lateinit var activeSessionHolder: ActiveSessionHolder
     @Inject lateinit var avatarRenderer: AvatarRenderer
     @Inject lateinit var vectorPreferences: VectorPreferences
+    @Inject lateinit var bugReporter: BugReporter
 
     private val spaceArgs: SpaceBottomSheetSettingsArgs by args()
 
@@ -106,6 +109,10 @@ class SpaceSettingsMenuBottomSheet : VectorBaseBottomSheetDialogFragment<BottomS
                     views.addRooms.isVisible = canAddChild
                 }.disposeOnDestroyView()
 
+        views.spaceBetaTag.setOnClickListener {
+            bugReporter.openBugReportScreen(requireActivity(), ReportType.SPACE_BETA_FEEDBACK)
+        }
+
         views.invitePeople.views.bottomSheetActionClickableZone.debouncedClicks {
             dismiss()
             interactionListener?.onShareSpaceSelected(spaceArgs.spaceId)
@@ -133,7 +140,7 @@ class SpaceSettingsMenuBottomSheet : VectorBaseBottomSheetDialogFragment<BottomS
             AlertDialog.Builder(requireContext())
                     .setMessage(getString(R.string.space_leave_prompt_msg))
                     .setPositiveButton(R.string.leave) { _, _ ->
-                        GlobalScope.launch {
+                        session.coroutineScope.launch {
                             try {
                                 session.getRoom(spaceArgs.spaceId)?.leave(null)
                             } catch (failure: Throwable) {

@@ -1,4 +1,33 @@
-Changes in Element 1.1.7 (2021-XX-XX)
+Changes in Element 1.1.8 (2021-XX-XX)
+===================================================
+
+Features ✨:
+ -
+
+Improvements 🙌:
+ -
+
+Bugfix 🐛:
+ - Fix a problem with database migration on nightly builds (#3335)
+
+Translations 🗣:
+ -
+
+SDK API changes ⚠️:
+ -
+
+Build 🧱:
+ - Compile with Kotlin 1.5.
+ - Upgrade some dependencies: gradle wrapper, third party lib, etc.
+ - Sign APK with build tools 30.0.3
+
+Test:
+ -
+
+Other changes:
+ - Add documentation on LoginWizard and RegistrationWizard (#3303)
+
+Changes in Element 1.1.7 (2021-05-12)
 ===================================================
 
 Features ✨:
@@ -28,9 +57,6 @@ Bugfix 🐛:
  - Fix read marker visibility/position when filtering some events 
  - Fix user invitation in case of restricted profile api (#3306)
 
-Translations 🗣:
- -
-
 SDK API changes ⚠️:
  - RegistrationWizard.createAccount() parameters are now all optional, following Matrix spec (#3205)
 
@@ -38,9 +64,6 @@ Build 🧱:
  - Upgrade to gradle 7
  - https://github.com/Piasy/BigImageViewer is now hosted on mavenCentral()
  - Upgrade Realm to version 10.4.0
-
-Test:
- -
 
 Other changes:
  - New store descriptions

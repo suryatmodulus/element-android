@@ -33,11 +33,12 @@ import im.vector.app.features.call.utils.awaitCreateOffer
 import im.vector.app.features.call.utils.awaitSetLocalDescription
 import im.vector.app.features.call.utils.awaitSetRemoteDescription
 import im.vector.app.features.call.utils.mapToCallCandidate
+import im.vector.app.features.session.coroutineScope
 import io.reactivex.disposables.Disposable
 import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.ReplaySubject
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -104,6 +105,9 @@ class WebRtcCall(val mxCall: MxCall,
     }
 
     private val listeners = CopyOnWriteArrayList<Listener>()
+
+    private val sessionScope: CoroutineScope?
+        get() = sessionProvider.get()?.coroutineScope
 
     fun addListener(listener: Listener) {
         listeners.add(listener)
@@ -194,7 +198,7 @@ class WebRtcCall(val mxCall: MxCall,
     fun onIceCandidate(iceCandidate: IceCandidate) = iceCandidateSource.onNext(iceCandidate)
 
     fun onRenegotiationNeeded(restartIce: Boolean) {
-        GlobalScope.launch(dispatcher) {
+        sessionScope?.launch(dispatcher) {
             if (mxCall.state != CallState.CreateOffer && mxCall.opponentVersion == 0) {
                 Timber.v("Opponent does not support renegotiation: ignoring onRenegotiationNeeded event")
                 return@launch
@@ -265,7 +269,7 @@ class WebRtcCall(val mxCall: MxCall,
         localSurfaceRenderers.addIfNeeded(localViewRenderer)
         remoteSurfaceRenderers.addIfNeeded(remoteViewRenderer)
 
-        GlobalScope.launch(dispatcher) {
+        sessionScope?.launch(dispatcher) {
             when (mode) {
                 VectorCallActivity.INCOMING_ACCEPT -> {
                     internalAcceptIncomingCall()
@@ -286,7 +290,7 @@ class WebRtcCall(val mxCall: MxCall,
     }
 
     fun acceptIncomingCall() {
-        GlobalScope.launch {
+        sessionScope?.launch {
             Timber.v("## VOIP acceptIncomingCall from state ${mxCall.state}")
             if (mxCall.state == CallState.LocalRinging) {
                 internalAcceptIncomingCall()
@@ -568,7 +572,7 @@ class WebRtcCall(val mxCall: MxCall,
     }
 
     fun updateRemoteOnHold(onHold: Boolean) {
-        GlobalScope.launch(dispatcher) {
+        sessionScope?.launch(dispatcher) {
             if (remoteOnHold == onHold) return@launch
             val direction: RtpTransceiver.RtpTransceiverDirection
             if (onHold) {
@@ -692,7 +696,7 @@ class WebRtcCall(val mxCall: MxCall,
     }
 
     fun onAddStream(stream: MediaStream) {
-        GlobalScope.launch(dispatcher) {
+        sessionScope?.launch(dispatcher) {
             // reportError("Weird-looking stream: " + stream);
             if (stream.audioTracks.size > 1 || stream.videoTracks.size > 1) {
                 Timber.e("## VOIP StreamObserver weird looking stream: $stream")
@@ -716,7 +720,7 @@ class WebRtcCall(val mxCall: MxCall,
     }
 
     fun onRemoveStream() {
-        GlobalScope.launch(dispatcher) {
+        sessionScope?.launch(dispatcher) {
             remoteSurfaceRenderers
                     .mapNotNull { it.get() }
                     .forEach { remoteVideoTrack?.removeSink(it) }
@@ -738,7 +742,7 @@ class WebRtcCall(val mxCall: MxCall,
         }
         val wasRinging = mxCall.state is CallState.LocalRinging
         mxCall.state = CallState.Terminated
-        GlobalScope.launch(dispatcher) {
+        sessionScope?.launch(dispatcher) {
             release()
         }
         onCallEnded(callId)
@@ -754,7 +758,7 @@ class WebRtcCall(val mxCall: MxCall,
     // Call listener
 
     fun onCallIceCandidateReceived(iceCandidatesContent: CallCandidatesContent) {
-        GlobalScope.launch(dispatcher) {
+        sessionScope?.launch(dispatcher) {
             iceCandidatesContent.candidates.forEach {
                 if (it.sdpMid.isNullOrEmpty() || it.candidate.isNullOrEmpty()) {
                     return@forEach
@@ -767,7 +771,7 @@ class WebRtcCall(val mxCall: MxCall,
     }
 
     fun onCallAnswerReceived(callAnswerContent: CallAnswerContent) {
-        GlobalScope.launch(dispatcher) {
+        sessionScope?.launch(dispatcher) {
             Timber.v("## VOIP onCallAnswerReceived ${callAnswerContent.callId}")
             val sdp = SessionDescription(SessionDescription.Type.ANSWER, callAnswerContent.answer.sdp)
             try {
@@ -783,7 +787,7 @@ class WebRtcCall(val mxCall: MxCall,
     }
 
     fun onCallNegotiateReceived(callNegotiateContent: CallNegotiateContent) {
-        GlobalScope.launch(dispatcher) {
+        sessionScope?.launch(dispatcher) {
             val description = callNegotiateContent.description
             val type = description?.type
             val sdpText = description?.sdp
