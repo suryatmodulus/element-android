@@ -21,6 +21,7 @@ import com.zhuinden.monarchy.Monarchy
 import org.matrix.android.sdk.api.pushrules.PushRuleService
 import org.matrix.android.sdk.api.pushrules.RuleScope
 import org.matrix.android.sdk.api.session.initsync.InitSyncStep
+import org.matrix.android.sdk.internal.SessionManager
 import org.matrix.android.sdk.internal.crypto.DefaultCryptoService
 import org.matrix.android.sdk.internal.di.SessionDatabase
 import org.matrix.android.sdk.internal.di.SessionId
@@ -144,7 +145,8 @@ internal class SyncResponseHandler @Inject constructor(
 
     private fun dispatchInvitedRoom(roomsSyncResponse: RoomsSyncResponse) {
         roomsSyncResponse.invite.keys.forEach { roomId ->
-            sessionListeners.dispatch { it.onNewInvitedRoom(roomId) }
+            sessionListeners.dispatch { session, listener ->
+                listener.onNewInvitedRoom(session, roomId) }
         }
     }
 

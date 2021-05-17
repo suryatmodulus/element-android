@@ -16,30 +16,15 @@
 
 package im.vector.app.features.call.lookup
 
-import org.matrix.android.sdk.api.extensions.orFalse
 import org.matrix.android.sdk.api.extensions.tryOrNull
 import org.matrix.android.sdk.api.session.Session
-import org.matrix.android.sdk.api.session.call.CallProtocolsChecker
-import org.matrix.android.sdk.api.session.events.model.EventType
 import org.matrix.android.sdk.api.session.events.model.toContent
 import org.matrix.android.sdk.api.session.events.model.toModel
 import org.matrix.android.sdk.api.session.room.Room
 import org.matrix.android.sdk.api.session.room.accountdata.RoomAccountDataTypes
 import org.matrix.android.sdk.api.session.room.model.create.CreateRoomParams
-import javax.inject.Inject
-import javax.inject.Provider
-import javax.inject.Singleton
 
-@Singleton
-class CallUserMapper @Inject constructor(private val _session: Provider<Session>) {
-
-    private val session: Session
-        get() = _session.get()
-
-    private val protocolsChecker: CallProtocolsChecker
-        get() = session.callSignalingService().getProtocolsChecker()
-
-    private val virtualRoomIdCache = HashSet<String>()
+class CallUserMapper(private val session: Session, private val protocolsChecker: CallProtocolsChecker) {
 
     fun nativeRoomForVirtualRoom(roomId: String): String? {
         val virtualRoom = session.getRoom(roomId) ?: return null
@@ -56,22 +41,6 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
         } ?: return null
         session.getRoom(virtualRoomId)?.markVirtual(roomId)
         return virtualRoomId
-    }
-
-    fun isVirtualRoom(roomId: String): Boolean {
-        if (!protocolsChecker.supportVirtualRooms) return false
-        if (virtualRoomIdCache.contains(roomId)) return true
-        if (nativeRoomForVirtualRoom(roomId) != null) return true
-        // also look in the create event for the claimed native room ID, which is the only
-        // way we can recognise a virtual room we've created when it first arrives down
-        // our stream. We don't trust this in general though, as it could be faked by an
-        // inviter: our main source of truth is the DM state.
-        val room = session.getRoom(roomId) ?: return false
-        val createEvent = room.getStateEvent(EventType.STATE_ROOM_CREATE)
-        // we only look at this for rooms we created (so inviters can't just cause rooms
-        // to be invisible)
-        if (createEvent == null || createEvent.senderId != session.myUserId) return false
-        return createEvent.content?.containsKey(RoomAccountDataTypes.EVENT_TYPE_VIRTUAL_ROOM).orFalse()
     }
 
     suspend fun onNewInvitedRoom(invitedRoomId: String) {
@@ -93,9 +62,6 @@ class CallUserMapper @Inject constructor(private val _session: Provider<Session>
                 // to make sure we joined virtual rooms on joining a native one)
                 session.joinRoom(invitedRoomId)
             }
-            // also put this room in the virtual room ID cache so isVirtualRoom return the right answer
-            // in however long it takes for the echo of setAccountData to come down the sync
-            virtualRoomIdCache.add(invitedRoom.roomId)
         }
     }
 

@@ -18,8 +18,6 @@ package im.vector.app.features.call.lookup
 
 import org.matrix.android.sdk.api.extensions.tryOrNull
 import org.matrix.android.sdk.api.session.Session
-import org.matrix.android.sdk.api.session.call.PROTOCOL_SIP_NATIVE
-import org.matrix.android.sdk.api.session.call.PROTOCOL_SIP_VIRTUAL
 import org.matrix.android.sdk.api.session.thirdparty.model.ThirdPartyUser
 
 suspend fun Session.pstnLookup(phoneNumber: String, protocol: String?): List<ThirdPartyUser> {

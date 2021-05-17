@@ -20,8 +20,6 @@ interface CallSignalingService {
 
     suspend fun getTurnServer(): TurnServerResponse
 
-    fun getProtocolsChecker(): CallProtocolsChecker
-
     /**
      * Create an outgoing call
      */

@@ -31,7 +31,6 @@ import im.vector.app.core.network.WifiDetector
 import im.vector.app.core.pushers.PushersManager
 import im.vector.app.core.utils.AssetReader
 import im.vector.app.core.utils.DimensionConverter
-import im.vector.app.features.call.lookup.CallUserMapper
 import im.vector.app.features.call.webrtc.WebRtcCallManager
 import im.vector.app.features.configuration.VectorConfiguration
 import im.vector.app.features.crypto.keysrequest.KeyRequestHandler
@@ -162,8 +161,6 @@ interface VectorComponent {
     fun pinLocker(): PinLocker
 
     fun webRtcCallManager(): WebRtcCallManager
-
-    fun callUserMapper(): CallUserMapper
 
     fun roomSummaryHolder(): RoomSummariesHolder
 

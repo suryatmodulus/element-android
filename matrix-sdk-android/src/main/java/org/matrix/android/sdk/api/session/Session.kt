@@ -260,14 +260,14 @@ interface Session :
         /**
          * Called when the session received new invites to room so the client can react to it once.
          */
-        fun onNewInvitedRoom(roomId: String) = Unit
+        fun onNewInvitedRoom(session: Session, roomId: String) = Unit
 
         /**
          * Possible cases:
          * - The access token is not valid anymore,
          * - a M_CONSENT_NOT_GIVEN error has been received from the homeserver
          */
-        fun onGlobalError(session: Session, globalError: GlobalError)
+        fun onGlobalError(session: Session, globalError: GlobalError) = Unit
     }
 
     val sharedSecretStorageService: SharedSecretStorageService

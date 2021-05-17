@@ -29,7 +29,6 @@ import im.vector.app.features.auth.ReAuthActivity
 import im.vector.app.features.call.CallControlsBottomSheet
 import im.vector.app.features.call.VectorCallActivity
 import im.vector.app.features.call.conference.VectorJitsiActivity
-import im.vector.app.features.call.lookup.CallUserMapper
 import im.vector.app.features.call.transfer.CallTransferActivity
 import im.vector.app.features.createdirect.CreateDirectRoomActivity
 import im.vector.app.features.crypto.keysbackup.settings.KeysBackupManageActivity
@@ -121,7 +120,6 @@ interface ScreenComponent {
     fun errorFormatter(): ErrorFormatter
     fun uiStateRepository(): UiStateRepository
     fun unrecognizedCertificateDialog(): UnrecognizedCertificateDialog
-    fun callUserMapper(): CallUserMapper
 
     /* ==========================================================================================
      * Activities

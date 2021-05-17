@@ -61,7 +61,6 @@ import org.matrix.android.sdk.internal.session.room.accountdata.RoomAccountDataD
 import org.matrix.android.sdk.internal.session.room.membership.RoomDisplayNameResolver
 import org.matrix.android.sdk.internal.session.room.membership.RoomMemberHelper
 import org.matrix.android.sdk.internal.session.room.relationship.RoomChildRelationInfo
-import org.matrix.android.sdk.internal.session.room.state.StateEventDataSource
 import org.matrix.android.sdk.internal.session.sync.model.RoomSyncSummary
 import org.matrix.android.sdk.internal.session.sync.model.RoomSyncUnreadNotifications
 import timber.log.Timber
@@ -74,8 +73,7 @@ internal class RoomSummaryUpdater @Inject constructor(
         private val roomAvatarResolver: RoomAvatarResolver,
         private val eventDecryptor: EventDecryptor,
         private val crossSigningService: DefaultCrossSigningService,
-        private val roomAccountDataDataSource: RoomAccountDataDataSource,
-        private val stateEventDataSource: StateEventDataSource) {
+        private val roomAccountDataDataSource: RoomAccountDataDataSource) {
 
     fun update(realm: Realm,
                roomId: String,

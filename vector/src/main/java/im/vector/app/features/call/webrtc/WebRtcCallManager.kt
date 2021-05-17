@@ -24,8 +24,10 @@ import im.vector.app.ActiveSessionDataSource
 import im.vector.app.core.services.CallService
 import im.vector.app.features.call.VectorCallActivity
 import im.vector.app.features.call.audio.CallAudioManager
+import im.vector.app.features.call.lookup.CallProtocolsChecker
 import im.vector.app.features.call.lookup.CallUserMapper
 import im.vector.app.features.call.utils.EglUtils
+import im.vector.app.features.call.vectorCallService
 import im.vector.app.push.fcm.FcmHelper
 import kotlinx.coroutines.asCoroutineDispatcher
 import org.matrix.android.sdk.api.extensions.orFalse
@@ -34,7 +36,6 @@ import org.matrix.android.sdk.api.session.Session
 import org.matrix.android.sdk.api.session.call.CallListener
 import org.matrix.android.sdk.api.session.call.CallState
 import org.matrix.android.sdk.api.session.call.MxCall
-import org.matrix.android.sdk.api.session.call.CallProtocolsChecker
 import org.matrix.android.sdk.api.session.room.model.call.CallAnswerContent
 import org.matrix.android.sdk.api.session.room.model.call.CallCandidatesContent
 import org.matrix.android.sdk.api.session.room.model.call.CallHangupContent
@@ -60,15 +61,17 @@ import javax.inject.Singleton
 @Singleton
 class WebRtcCallManager @Inject constructor(
         private val context: Context,
-        private val activeSessionDataSource: ActiveSessionDataSource,
-        private val callUserMapper: CallUserMapper
+        private val activeSessionDataSource: ActiveSessionDataSource
 ) : CallListener, LifecycleObserver {
 
     private val currentSession: Session?
         get() = activeSessionDataSource.currentValue?.orNull()
 
     private val protocolsChecker: CallProtocolsChecker?
-        get() = currentSession?.callSignalingService()?.getProtocolsChecker()
+        get() = currentSession?.vectorCallService?.protocolChecker
+
+    private val callUserMapper: CallUserMapper?
+        get() = currentSession?.vectorCallService?.userMapper
 
     interface CurrentCallListener {
         fun onCurrentCallChange(call: WebRtcCall?) {}
@@ -253,7 +256,7 @@ class WebRtcCallManager @Inject constructor(
     }
 
     suspend fun startOutgoingCall(nativeRoomId: String, otherUserId: String, isVideoCall: Boolean) {
-        val signalingRoomId =  callUserMapper.getOrCreateVirtualRoomForRoom(nativeRoomId, otherUserId) ?: nativeRoomId
+        val signalingRoomId =  callUserMapper?.getOrCreateVirtualRoomForRoom(nativeRoomId, otherUserId) ?: nativeRoomId
         Timber.v("## VOIP startOutgoingCall in room $signalingRoomId to $otherUserId isVideo $isVideoCall")
         if (getCallsByRoomId(nativeRoomId).isNotEmpty()) {
             Timber.w("## VOIP you already have a call in this room")
@@ -322,7 +325,7 @@ class WebRtcCallManager @Inject constructor(
 
     override fun onCallInviteReceived(mxCall: MxCall, callInviteContent: CallInviteContent) {
         Timber.v("## VOIP onCallInviteReceived callId ${mxCall.callId}")
-        val nativeRoomId = callUserMapper.nativeRoomForVirtualRoom(mxCall.roomId) ?: mxCall.roomId
+        val nativeRoomId = callUserMapper?.nativeRoomForVirtualRoom(mxCall.roomId) ?: mxCall.roomId
         if (getCallsByRoomId(nativeRoomId).isNotEmpty()) {
             Timber.w("## VOIP you already have a call in this room")
             return

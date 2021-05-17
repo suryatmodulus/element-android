@@ -18,10 +18,14 @@ package org.matrix.android.sdk.internal.session
 
 import org.matrix.android.sdk.api.extensions.tryOrNull
 import org.matrix.android.sdk.api.session.Session
+import org.matrix.android.sdk.internal.SessionManager
+import org.matrix.android.sdk.internal.di.SessionId
 import javax.inject.Inject
 
 @SessionScope
-internal class SessionListeners @Inject constructor() {
+internal class SessionListeners @Inject constructor(
+        @SessionId private val sessionId: String,
+        private val sessionManager: SessionManager) {
 
     private val listeners = mutableSetOf<Session.Listener>()
 
@@ -37,11 +41,17 @@ internal class SessionListeners @Inject constructor() {
         }
     }
 
-    fun dispatch(block: (Session.Listener) -> Unit) {
+    fun dispatch(block: (Session, Session.Listener) -> Unit) {
         synchronized(listeners) {
+            val session = getSession()
             listeners.forEach {
-                tryOrNull { block(it) }
+                tryOrNull { block(session, it) }
             }
         }
+    }
+
+    private fun getSession(): Session {
+        return sessionManager.getSessionComponent(sessionId)?.session()
+                ?: throw IllegalStateException("No session found with this id.")
     }
 }

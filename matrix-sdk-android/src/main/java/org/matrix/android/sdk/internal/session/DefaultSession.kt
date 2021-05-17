@@ -168,8 +168,8 @@ internal class DefaultSession @Inject constructor(
             lifecycleObservers.forEach {
                 it.onSessionStarted(this)
             }
-            sessionListeners.dispatch {
-                it.onSessionStarted(this)
+            sessionListeners.dispatch { _, listener ->
+                listener.onSessionStarted(this)
             }
         }
     }
@@ -211,8 +211,8 @@ internal class DefaultSession @Inject constructor(
         // timelineEventDecryptor.destroy()
         uiHandler.post {
             lifecycleObservers.forEach { it.onSessionStopped(this) }
-            sessionListeners.dispatch {
-                it.onSessionStopped(this)
+            sessionListeners.dispatch { _, listener ->
+                listener.onSessionStopped(this)
             }
         }
         cryptoService.get().close()
@@ -241,8 +241,8 @@ internal class DefaultSession @Inject constructor(
             lifecycleObservers.forEach {
                 it.onClearCache(this)
             }
-            sessionListeners.dispatch {
-                it.onClearCache(this)
+            sessionListeners.dispatch { _, listener ->
+                listener.onClearCache(this)
             }
         }
         withContext(NonCancellable) {
@@ -252,8 +252,8 @@ internal class DefaultSession @Inject constructor(
     }
 
     override fun onGlobalError(globalError: GlobalError) {
-        sessionListeners.dispatch {
-            it.onGlobalError(this, globalError)
+        sessionListeners.dispatch { _, listener ->
+            listener.onGlobalError(this, globalError)
         }
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 The Matrix.org Foundation C.I.C.
+ * Copyright (c) 2021 New Vector Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,31 +14,23 @@
  * limitations under the License.
  */
 
-package org.matrix.android.sdk.api.session.call
+package im.vector.app.features.call.lookup
 
+import im.vector.app.features.session.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.matrix.android.sdk.api.extensions.tryOrNull
+import org.matrix.android.sdk.api.session.Session
 import org.matrix.android.sdk.api.session.room.model.thirdparty.ThirdPartyProtocol
-import org.matrix.android.sdk.internal.session.SessionScope
-import org.matrix.android.sdk.internal.session.thirdparty.GetThirdPartyProtocolsTask
-import org.matrix.android.sdk.internal.task.TaskExecutor
 import timber.log.Timber
 import java.util.concurrent.atomic.AtomicBoolean
-import javax.inject.Inject
 
 const val PROTOCOL_PSTN_PREFIXED = "im.vector.protocol.pstn"
 const val PROTOCOL_PSTN = "m.protocol.pstn"
 const val PROTOCOL_SIP_NATIVE = "im.vector.protocol.sip_native"
 const val PROTOCOL_SIP_VIRTUAL = "im.vector.protocol.sip_virtual"
 
-/**
- * This class is responsible for checking if the HS support some protocols for VoIP.
- * As long as the request succeed, it'll check only once by session.
- */
-@SessionScope
-class CallProtocolsChecker @Inject internal constructor(private val taskExecutor: TaskExecutor,
-                                                        private val getThirdPartyProtocolsTask: GetThirdPartyProtocolsTask) {
+class CallProtocolsChecker(private val session: Session) {
 
     interface Listener {
         fun onPSTNSupportUpdated() = Unit
@@ -65,7 +57,7 @@ class CallProtocolsChecker @Inject internal constructor(private val taskExecutor
         private set
 
     fun checkProtocols() {
-        taskExecutor.executorScope.launch {
+        session.coroutineScope.launch {
             checkThirdPartyProtocols()
         }
     }
@@ -112,7 +104,7 @@ class CallProtocolsChecker @Inject internal constructor(private val taskExecutor
 
     private suspend fun getThirdPartyProtocols(maxTries: Int): Map<String, ThirdPartyProtocol> {
         return try {
-            getThirdPartyProtocolsTask.execute(Unit)
+            session.thirdPartyService().getThirdPartyProtocols()
         } catch (failure: Throwable) {
             if (maxTries == 1) {
                 throw failure
