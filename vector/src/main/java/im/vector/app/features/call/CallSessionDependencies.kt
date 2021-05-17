@@ -32,5 +32,3 @@ val Session.vectorCallService: VectorCallService by SessionScopedProperty {
         override val userMapper = CallUserMapper(it, protocolChecker)
     }
 }
-
-
